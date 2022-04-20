@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+pragma solidity =0.8.12;
+
 import "./libraries/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./interfaces/IBobtailNFT.sol";
@@ -70,21 +74,11 @@ contract Matchs is ReentrancyGuard {
     event NewAddressInMatch(address player, uint256 matchId, uint256 tokenId);
     event RewardClaimed(address player, uint256[] matchIds, uint256 reward);
 
-    constructor(
-        address _mainSigner,
-        address _contractAddress,
-        address _stakingManager,
-        address _bbone
-    ) {
+    constructor(address _mainSigner, address _bbone) {
         mainSigner = _mainSigner;
         //Default regions
         serverRegions["NA"] = true;
         bbone = IBBone(_bbone);
-
-        allowedStakingManagerAddress = _stakingManager;
-        allowedStakingManager = IBobtailStaking(_stakingManager);
-        allowedNftContractAddress = _contractAddress;
-        allowedNftContract = IBobtailNFT(_contractAddress);
 
         //Default rewards
         portionRewardPerRank[0] = 2200; //22% #1
@@ -97,6 +91,16 @@ contract Matchs is ReentrancyGuard {
         portionRewardPerRank[7] = 100; //1% #21 to #30
         portionRewardPerRank[8] = 50; //0.5% #31 to #40
         portionRewardPerRank[9] = 25; //0.25% #41 to #50
+    }
+
+    function initializeContract(
+        address _contractAddress,
+        address _stakingManager
+    ) public {
+        allowedStakingManagerAddress = _stakingManager;
+        allowedStakingManager = IBobtailStaking(_stakingManager);
+        allowedNftContractAddress = _contractAddress;
+        allowedNftContract = IBobtailNFT(_contractAddress);
     }
 
     //**************************************************
@@ -133,16 +137,11 @@ contract Matchs is ReentrancyGuard {
         serverRegions[_name] = status;
     }
 
-    function joinMatch(
-        address _contractAddress,
-        uint256 _tokenId,
-        string calldata region
-    ) external onlyEOA nonReentrant {
-        require(
-            allowedNftContractAddress == _contractAddress,
-            "Invalid contract"
-        );
-
+    function joinMatch(uint256 _tokenId, string calldata region)
+        external
+        onlyEOA
+        nonReentrant
+    {
         require(serverRegions[region], "Invalid region");
 
         // Invalid region TODO Test
@@ -239,7 +238,7 @@ contract Matchs is ReentrancyGuard {
             }
         }
 
-        bbone.mint(msg.sender, totalReward);
+        bbone.payMatchReward(msg.sender, totalReward);
         emit RewardClaimed(msg.sender, _matchIds, totalReward);
     }
 

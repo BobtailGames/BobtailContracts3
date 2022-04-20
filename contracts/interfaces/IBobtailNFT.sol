@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+pragma solidity =0.8.12;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 interface IBobtailNFT is IERC721 {
@@ -19,16 +22,11 @@ interface IBobtailNFT is IERC721 {
         uint256 skin;
         uint256 face;
         uint256 rarity;
-        // uint256 id;
+        uint256 id;
         uint256 timestampMint;
         // uint256 timestampStake;
         uint256 pendingReward;
     }
-
-    function tokenInfo(uint256 _tokenId)
-        external
-        view
-        returns (NftEntity memory);
 
     function isRevealed(uint256 _tokenId) external view returns (bool);
 
@@ -41,5 +39,20 @@ interface IBobtailNFT is IERC721 {
         uint256 _tokenId,
         uint8 _lvl,
         uint8 _exp
-    ) external returns (bool);
+    ) external;
+
+    function tokensOf(address _account)
+        external
+        view
+        returns (uint256[] memory tokenIds);
+
+    function getTokensInfo(uint256[] memory _tokenIds)
+        external
+        view
+        returns (NftEntityExtended[] memory);
+
+    function tokenInfo(uint256 _tokenId)
+        external
+        view
+        returns (NftEntity memory);
 }

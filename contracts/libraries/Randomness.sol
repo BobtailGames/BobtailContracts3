@@ -2,11 +2,11 @@
 pragma solidity >=0.8.0;
 
 library Randomness {
-    function generate(uint256 _block, uint256 _size)
-        internal
-        view
-        returns (uint256[] memory randomnessExpanded)
-    {
+    function generate(
+        uint256 _block,
+        uint256 _tokenId,
+        uint256 _size
+    ) internal view returns (uint256[] memory randomnessExpanded) {
         uint256 randomness = uint256(
             keccak256(
                 abi.encodePacked(
@@ -16,9 +16,12 @@ library Randomness {
                     blockhash(_block - 8),
                     blockhash(_block - 15),
                     _block,
-                    blockhash(_block - 10),
-                    blockhash(_block - 9),
-                    blockhash(_block - 12)
+                    blockhash(_block + 1),
+                    blockhash(_block + 5),
+                    blockhash(_block + 8),
+                    _tokenId,
+                    blockhash(_block + 15),
+                    blockhash(_block + 10)
                 )
             )
         );
