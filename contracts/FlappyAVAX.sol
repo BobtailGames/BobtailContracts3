@@ -20,12 +20,12 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     /*///////////////////////////////////////////////////////////////
                                  CONSTANTS
     //////////////////////////////////////////////////////////////*/
-    uint8 private constant MAX_LEVELXP = 100;
-    uint256 private constant MAX_SUPPLY = 10000;
-    uint256 private constant MAX_MINTSPERTX = 30;
-    uint256 private constant MINT_PRICE_AVAX = 1 ether; // 1 AVAX
-    uint256 private constant REVEAL_TIME = 90 seconds;
-    uint256 private constant ONE_EXP_PER_TIME = 864 seconds;
+    uint8 public constant MAX_LEVELXP = 100;
+    uint256 public constant MAX_SUPPLY = 10000;
+    uint256 public constant MAX_MINTSPERTX = 30;
+    uint256 public constant MINT_PRICE_AVAX = 1 ether; // 1 AVAX
+    uint256 public constant REVEAL_TIME = 90 seconds;
+    uint256 public constant ONE_EXP_PER_TIME = 864 seconds;
 
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
@@ -33,13 +33,26 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
 
     IBBone public immutable bbone;
 
-    constructor(address _bbone, address _stakingManager)
-        ERC721("FlappyAVAX", "FlappyAVAX")
-    {
+    constructor(address _bbone) ERC721("FlappyAVAX", "FlappyAVAX") {
         // On launch it's hosted on a own server, after mint and reveal of all supply will be changed to IPFS
         // _setBaseURI("https://bobtail.games/ipfs/game1/");
         bbone = IBBone(_bbone);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        STAKING MANAGER CONFIGURATION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice How much a match should last
+    IBobtailStaking public stakingManager;
+
+    event StakingManagerUpdated(address stakingManager);
+
+    /// @notice Set staking manager
+    function setStakingManager(address _stakingManager) external onlyOwner {
+        // Update staking manager
         stakingManager = IBobtailStaking(_stakingManager);
+        emit StakingManagerUpdated(_stakingManager);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -88,7 +101,7 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         payable(address(bbone)).transfer(msg.value);
         // Call to add AVAX sent and mint the required amount of
         // BBone and add AVAX-BBone in equal parts to liquidity
-        bbone.addLiquidity(msg.value);
+        bbone.addLiquidity(msg.value, IBBone.LiquidityType.MINTING);
     }
 
     /// @notice The tokens are revealed after 90 seconds of minting to make it hard
@@ -132,6 +145,52 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         returns (NftEntity memory)
     {
         return nfts[_tokenId];
+    }
+
+    /// @notice Returns the info from a token id with extended data
+    /// it's not used in write operations to prevent bugs.
+    function tokenInfoExtended(uint256 _tokenId)
+        public
+        view
+        returns (NftEntityExtended memory)
+    {
+        // Get current level and exp
+        (uint8 level, uint8 experience) = getLevelAndExp(_tokenId);
+
+        // Instantiate the result entity in memory with default and stored data
+        NftEntityExtended memory token = NftEntityExtended({
+            id: _tokenId, // Id of the token
+            lvl: level, // Current stored level
+            exp: experience, // Current stored exp
+            skin: 0, // Default skin
+            face: 0, // Default face
+            rarity: 0, // Default rarity
+            timestampMint: nfts[_tokenId].timestampMint, // Minting timestamp
+            revealed: 0, // Is revealed
+            pendingReward: 0 // Default pending reward = 0
+        });
+        // If token is revealed get reveal info
+        if (isRevealed(_tokenId)) {
+            // Get the random rarity, skin, and face
+            (uint256 rarity, uint256 skin, uint256 face) = getRevealInfo(
+                _tokenId
+            );
+            // Set is revealed
+            token.revealed = 1;
+            // Skin id
+            token.skin = skin;
+            // Face id
+            token.face = face;
+            // Rarity
+            token.rarity = rarity;
+            // Check if is staked
+            (bool staked, ) = stakingManager.isStaked(_tokenId);
+            if (staked) {
+                // If is staked get pending reward
+                token.pendingReward = stakingManager.stakingReward(_tokenId);
+            }
+        }
+        return token;
     }
 
     /// @notice Returns the ids of tokens owned by a address we iterate all existing tokens to
@@ -230,74 +289,16 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         );
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             // Get extended token data
-            tokens[i] = _getTokenInfo(_tokenIds[i]);
+            tokens[i] = tokenInfoExtended(_tokenIds[i]);
         }
         return tokens;
-    }
-
-    /// @notice Returns the info from a token id with extended data
-    /// it's not used in write operations to prevent bugs.
-    function _getTokenInfo(uint256 _tokenId)
-        private
-        view
-        returns (NftEntityExtended memory)
-    {
-        // Get current level and exp
-        (uint8 level, uint8 experience) = getLevelAndExp(_tokenId);
-
-        // Instantiate the result entity in memory with default and stored data
-        NftEntityExtended memory token = NftEntityExtended({
-            id: _tokenId, // Id of the token
-            lvl: level, // Current stored level
-            exp: experience, // Current stored exp
-            skin: 0, // Default skin
-            face: 0, // Default face
-            rarity: 0, // Default rarity
-            timestampMint: nfts[_tokenId].timestampMint, // Minting timestamp
-            revealed: 0, // Is revealed
-            pendingReward: 0 // Default pending reward = 0
-        });
-        // If token is revealed get reveal info
-        if (isRevealed(_tokenId)) {
-            // Get the random rarity, skin, and face
-            (uint256 rarity, uint256 skin, uint256 face) = getRevealInfo(
-                _tokenId
-            );
-            // Set is revealed
-            token.revealed = 1;
-            // Skin id
-            token.skin = skin;
-            // Face id
-            token.face = face;
-            // Rarity
-            token.rarity = rarity;
-            // Check if is staked
-            (bool staked, ) = stakingManager.isStaked(_tokenId);
-            if (staked) {
-                // If is staked get pending reward
-                token.pendingReward = stakingManager.stakingReward(_tokenId);
-            }
-        }
-        return token;
     }
 
     /*///////////////////////////////////////////////////////////////
                             LEVEL EXP STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The stakingManager manager allows to check if a NFT
-    /// is staked and can update level and exp after withdraw a staked token
-    IBobtailStaking private stakingManager;
-
-    event StakingManagerUpdated(address stakingManager);
-
     event LevelAndExpUpdated(uint256 tokenId, uint8 lvl, uint8 exp);
-
-    /// @notice Update staking manager
-    function setStakingManager(address _stakingManager) external onlyOwner {
-        stakingManager = IBobtailStaking(_stakingManager);
-        emit StakingManagerUpdated(_stakingManager);
-    }
 
     /// @notice Store level and experience when token is withdraw
     function setLevelAndExp(
@@ -328,6 +329,7 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         uint256 _tokenId
     ) internal virtual override {
         super._beforeTokenTransfer(_from, _to, _tokenId);
+
         // Check if the token is staked
         (bool staked, ) = stakingManager.isStaked(_tokenId);
         // Only allow unstaked tokens

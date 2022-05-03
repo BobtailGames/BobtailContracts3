@@ -8,6 +8,7 @@ import "./libraries/ReentrancyGuard.sol";
 
 import "./interfaces/IJoeRouter02.sol";
 import "./interfaces/IJoeFactory.sol";
+import "./interfaces/IBBone.sol";
 
 // solhint-disable mark-callable-contracts, indent
 
@@ -16,7 +17,7 @@ import "./interfaces/IJoeFactory.sol";
 /// @notice Reward token for Bobtail.games, this token cannot be
 /// bought, only sold and is rewarded by staking or playing.
 
-contract BBone is ERC20, Ownable, ReentrancyGuard {
+contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -44,34 +45,36 @@ contract BBone is ERC20, Ownable, ReentrancyGuard {
     }
 
     /*///////////////////////////////////////////////////////////////
-                STAKING/MATCH MANAGER SETUP/CONFIGURATION
+                        STAKING MANAGER CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The staking manager is allowed to pay rewards
+    /// @notice How much a match should last
     address public stakingManager;
 
-    /// @notice The match manager is allowed to pay rewards
+    event StakingManagerUpdated(address matchDuration);
+
+    /// @notice Set staking manager
+    function setStakingManager(address _stakingManager) external onlyOwner {
+        // Update staking manager
+        stakingManager = _stakingManager;
+        emit StakingManagerUpdated(_stakingManager);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        MATCH MANAGER CONFIGURATION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice The Bobtail Match Manager to check if a token is in match
+    /// and prevent unstaking
     address public matchManager;
 
-    /// @notice This is called only on deployment and can't be called again
-    function initialSetup(address _staking, address _matchManager)
-        external
-        onlyOwner
-    {
-        // Only allow setup one time
-        require(address(0) == stakingManager, "Setup failed");
-        stakingManager = _staking;
+    event MatchManagerUpdated(address matchDuration);
+
+    /// @notice Set match manager
+    function setMatchManager(address _matchManager) external onlyOwner {
+        // Update match manager
         matchManager = _matchManager;
-    }
-
-    /// @notice Set staking manager
-    function setStakingManager(address _address) external onlyOwner {
-        stakingManager = _address;
-    }
-
-    /// @notice Set staking manager
-    function setMatchManager(address _address) external onlyOwner {
-        matchManager = _address;
+        emit MatchManagerUpdated(_matchManager);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -100,25 +103,38 @@ contract BBone is ERC20, Ownable, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                     LIQUIDITY LOGIC
     //////////////////////////////////////////////////////////////*/
+
+    event LiquidityAdded(
+        uint256 amountToken,
+        uint256 amountAVAX,
+        uint256 liquidity,
+        LiquidityType liquidityType
+    );
+
     /// @notice This is called by Bobtail token and NFT contracts allowed to add liquidity.
-    function addLiquidity(uint256 balanceAvax) external nonReentrant {
+    function addLiquidity(uint256 _amountAvax, LiquidityType _liquidityType)
+        external
+        nonReentrant
+    {
         // Only allowed matchManager
         require(bobtailContracts[msg.sender], "Caller is not bobtail contract");
         // The necessary avax balance must be sent before calling this
-        require(address(this).balance >= balanceAvax, "Not enough balance");
+        require(address(this).balance >= _amountAvax, "Not enough balance");
         // Create swap path
         address[] memory path = new address[](2);
         path[0] = joeRouter.WAVAX();
         path[1] = address(this);
+
         // Calculate the amount of BBone to add to liquidity
-        uint256[] memory amounts = joeRouter.getAmountsOut(balanceAvax, path);
+        uint256[] memory amounts = joeRouter.getAmountsOut(_amountAvax, path);
         // Mint the amount of BBone to this contract
         _mint(address(this), amounts[1]);
         // add liquidity to DEX
         // approve transfer BBone to TraderJoe router to cover all possible scenarios
         _approve(address(this), address(joeRouter), amounts[1]);
         // add the liquidity
-        joeRouter.addLiquidityAVAX{value: balanceAvax}(
+        (uint256 amountToken, uint256 amountAVAX, uint256 liquidity) = joeRouter
+            .addLiquidityAVAX{value: _amountAvax}(
             address(this),
             amounts[1],
             0, // slippage is unavoidable
@@ -126,6 +142,7 @@ contract BBone is ERC20, Ownable, ReentrancyGuard {
             address(this),
             block.timestamp
         );
+        emit LiquidityAdded(amountToken, amountAVAX, liquidity, _liquidityType);
     }
 
     /*///////////////////////////////////////////////////////////////

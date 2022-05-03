@@ -1,0 +1,50 @@
+@startuml Minting
+!theme cerulean
+skinparam sequenceArrowThickness 3
+skinparam roundcorner 10
+skinparam maxmessagesize 190
+skinparam backgroundcolor transparent
+
+actor "User(s)" as User
+participant MatchManager
+participant "Stealth Server(s) 1" as Server1
+participant "Internal blockchain" as DbServer
+participant "Public GameServer" as GameServer
+participant "Stealth Server(s) 2" as Server2
+
+
+User -> MatchManager: Join available match
+activate MatchManager
+MatchManager -> MatchManager : Write state
+return Wait for GameServer
+activate User
+MatchManager -> Server1: Read match state(Creation, join)   
+Server1 -> DbServer: Write match state(Creation, join)   
+
+
+User -> GameServer: Join game
+
+deactivate User
+activate GameServer
+User <-- GameServer: Play and wait to finish game and results
+activate User
+
+DbServer <-o GameServer: Write game leaderboard(Game finished)
+deactivate GameServer
+DbServer o-> Server2: Read game results  
+
+activate Server2
+DbServer <-- Server2: Write signed message for valid match and account  
+deactivate Server2
+DbServer o-> Server2: Read game results signed 
+
+Server2 --> GameServer: Write signed results  
+User -> GameServer: Claim reward request
+User <-- GameServer: Signed message with rank
+User -> MatchManager: Claim reward 
+activate MatchManager
+MatchManager -> MatchManager: Validate signed message with rank
+MatchManager -> MatchManager: Calculate reward based on rank
+User <-- MatchManager: Pay reward
+
+@enduml

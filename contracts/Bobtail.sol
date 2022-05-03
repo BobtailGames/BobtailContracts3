@@ -32,7 +32,7 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
         ERC20("Bobtail.games", "BOBTAIL")
         ERC20Permit("Bobtail.games")
     {
-        _mint(msg.sender, 87_000_000_000 * 10**decimals());
+        _mint(msg.sender, 1_000_000_000 * 10**decimals());
         IJoeRouter02 _joeRouter = IJoeRouter02(_router);
 
         // Create a uniswap pair for this new token
@@ -116,6 +116,13 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
     }
 
     /*///////////////////////////////////////////////////////////////
+                        LEVEL/EXP STORAGE
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice LP pairs to take fee on buy and sell
+    mapping(address => bool) private levelAndExp;
+
+    /*///////////////////////////////////////////////////////////////
                            LOCK SWAP LOGIC
     //////////////////////////////////////////////////////////////*/
 
@@ -139,9 +146,9 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
 
     /// @notice Override ERC20 _transfer to take fee
     function _transfer(
-        address from,
-        address to,
-        uint256 amount
+        address _from,
+        address _to,
+        uint256 _amount
     ) internal override {
         // Get balance of Bobtail in contract
         uint256 contractTokenBalance = balanceOf(address(this));
@@ -163,16 +170,79 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
         // and the lock swap is not active
         if (lpPairs[msg.sender] && swapAndLiquifyEnabled && !inSwapAndLiquify) {
             // calculate the number of Bobtail to take as a fee
-            uint256 tokensToLock = (amount * feePercentage) / (10**2);
+            uint256 tokensToLock = (_amount * feePercentage) / (10**2);
             // take the fee and send those tokens to this contract address
             // and then send the remainder of tokens to original recipient
-            uint256 tokensToTransfer = amount - tokensToLock;
-            super._transfer(from, address(this), tokensToLock);
-            super._transfer(from, to, tokensToTransfer);
+            uint256 tokensToTransfer = _amount - tokensToLock;
+            super._transfer(_from, address(this), tokensToLock);
+            super._transfer(_from, _to, tokensToTransfer);
         } else {
             // Don't take fee
-            super._transfer(from, to, amount);
+            super._transfer(_from, _to, _amount);
         }
+
+        updateTimeShare(_from);
+        updateTimeShare(_to);
+    }
+
+    ///@dev instead of keeping time share balance, we could simply mint time share token
+    ///but this would make every transfer consume a little more gas, and would be subjectively less clean
+    struct TimeShare {
+        uint256 lastBlockTimestamp;
+        uint256 lastBalance;
+    }
+
+    mapping(address => TimeShare) public timeShares;
+
+    //no need to log block number explicitly
+    event UpdateTimeShare(address indexed owner, uint256 balance);
+
+    ///@notice update time share balance available to _address at current block
+    function updateTimeShare(address _address) internal {
+        TimeShare storage timeShare = timeShares[_address];
+
+        if (timeShare.lastBlockTimestamp != 0) {
+            timeShare.lastBalance = timeShareBalanceOf(_address);
+        }
+
+        timeShare.lastBlockTimestamp = block.timestamp;
+
+        emit UpdateTimeShare(_address, timeShare.lastBalance);
+    }
+
+    /**
+      @notice get time share balance available to _address at current block
+      @dev formula to calculate the amount of TST the address is entitled at block:
+      x = last_updated_balance + holding_duration/blocks_in_year * days_in_year * percentage_of_tokens_owned
+      where 
+      holding_duration = block.number - last_updated_block_number
+      percentage_of_tokens_owned = balance / total_supply 
+      @return holdingDuration share balance
+    */
+    function timeShareBalanceOf(address _address)
+        public
+        view
+        returns (uint256 holdingDuration)
+    {
+        TimeShare memory timeShare = timeShares[_address];
+
+        holdingDuration = block.timestamp - timeShare.lastBlockTimestamp;
+        uint256 percentageOfTokensOwned = totalSupply() / balanceOf(_address);
+
+        uint256 tmp = holdingDuration * balanceOf(_address) * 365 * 10e17;
+        /*
+        
+        timeShare.lastBalance.add(
+            block
+                .number
+                .sub(timeShare.lastBlockNumber)
+                .mul(balances[_address])
+                .mul(daysInYear)
+                .mul(10e17)
+                .div(blocksInYear.mul(totalSupply_))
+        );
+        */
+        // return tmp / totalSupply();
     }
 
     function _swapAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
@@ -190,7 +260,7 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
 
         // how much AVAX and BBone did we just swap into?
         uint256 newBalanceAvax = address(bboneToken).balance - initialBalance;
-        bboneToken.addLiquidity(newBalanceAvax);
+        bboneToken.addLiquidity(newBalanceAvax, IBBone.LiquidityType.SWAP);
 
         //TODO  emit SwapAndLiquify(half, newBalance, otherHalf);
     }

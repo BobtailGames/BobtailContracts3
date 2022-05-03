@@ -17,42 +17,60 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
+export declare namespace ERC20Votes {
+  export type CheckpointStruct = {
+    fromBlock: BigNumberish;
+    votes: BigNumberish;
+  };
+
+  export type CheckpointStructOutput = [number, BigNumber] & {
+    fromBlock: number;
+    votes: BigNumber;
+  };
+}
+
 export interface BobtailInterface extends utils.Interface {
   contractName: "Bobtail";
   functions: {
-    "DEFAULT_ADMIN_ROLE()": FunctionFragment;
+    "DOMAIN_SEPARATOR()": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
-    "bboneToken()": FunctionFragment;
+    "checkpoints(address,uint32)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
-    "durationBetweenEachBuyback()": FunctionFragment;
-    "getRoleAdmin(bytes32)": FunctionFragment;
-    "grantRole(bytes32,address)": FunctionFragment;
-    "hasRole(bytes32,address)": FunctionFragment;
+    "delegate(address)": FunctionFragment;
+    "delegateBySig(address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
+    "delegates(address)": FunctionFragment;
+    "feePercentage()": FunctionFragment;
+    "getPastTotalSupply(uint256)": FunctionFragment;
+    "getPastVotes(address,uint256)": FunctionFragment;
+    "getVotes(address)": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "joePair()": FunctionFragment;
-    "joeRouter()": FunctionFragment;
+    "minTokensBeforeSwap()": FunctionFragment;
     "name()": FunctionFragment;
+    "nonces(address)": FunctionFragment;
+    "numCheckpoints(address)": FunctionFragment;
     "owner()": FunctionFragment;
-    "previousBuyBackTime()": FunctionFragment;
+    "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
-    "renounceRole(bytes32,address)": FunctionFragment;
-    "revokeRole(bytes32,address)": FunctionFragment;
+    "setFee(uint32)": FunctionFragment;
+    "setLpPair(address,bool)": FunctionFragment;
+    "setMinTokensBeforeSwap(uint32)": FunctionFragment;
     "setSwapAndLiquifyEnabled(bool)": FunctionFragment;
-    "supportsInterface(bytes4)": FunctionFragment;
     "swapAndLiquifyEnabled()": FunctionFragment;
     "symbol()": FunctionFragment;
+    "timeShareBalanceOf(address)": FunctionFragment;
+    "timeShares(address)": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "wavax()": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "DEFAULT_ADMIN_ROLE",
+    functionFragment: "DOMAIN_SEPARATOR",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -65,67 +83,98 @@ export interface BobtailInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "bboneToken",
-    values?: undefined
+    functionFragment: "checkpoints",
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "decreaseAllowance",
     values: [string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "delegate", values: [string]): string;
   encodeFunctionData(
-    functionFragment: "durationBetweenEachBuyback",
+    functionFragment: "delegateBySig",
+    values: [
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BytesLike,
+      BytesLike
+    ]
+  ): string;
+  encodeFunctionData(functionFragment: "delegates", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "feePercentage",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getRoleAdmin",
-    values: [BytesLike]
+    functionFragment: "getPastTotalSupply",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "grantRole",
-    values: [BytesLike, string]
+    functionFragment: "getPastVotes",
+    values: [string, BigNumberish]
   ): string;
-  encodeFunctionData(
-    functionFragment: "hasRole",
-    values: [BytesLike, string]
-  ): string;
+  encodeFunctionData(functionFragment: "getVotes", values: [string]): string;
   encodeFunctionData(
     functionFragment: "increaseAllowance",
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "joePair", values?: undefined): string;
-  encodeFunctionData(functionFragment: "joeRouter", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "minTokensBeforeSwap",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  encodeFunctionData(functionFragment: "nonces", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "numCheckpoints",
+    values: [string]
+  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "previousBuyBackTime",
-    values?: undefined
+    functionFragment: "permit",
+    values: [
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BytesLike,
+      BytesLike
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceRole",
-    values: [BytesLike, string]
+    functionFragment: "setFee",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "revokeRole",
-    values: [BytesLike, string]
+    functionFragment: "setLpPair",
+    values: [string, boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setMinTokensBeforeSwap",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setSwapAndLiquifyEnabled",
     values: [boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "supportsInterface",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "swapAndLiquifyEnabled",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "timeShareBalanceOf",
+    values: [string]
+  ): string;
+  encodeFunctionData(functionFragment: "timeShares", values: [string]): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
     values?: undefined
@@ -142,58 +191,71 @@ export interface BobtailInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
-  encodeFunctionData(functionFragment: "wavax", values?: undefined): string;
 
   decodeFunctionResult(
-    functionFragment: "DEFAULT_ADMIN_ROLE",
+    functionFragment: "DOMAIN_SEPARATOR",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "bboneToken", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "checkpoints",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "decreaseAllowance",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "delegate", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "durationBetweenEachBuyback",
+    functionFragment: "delegateBySig",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "delegates", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "feePercentage",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getRoleAdmin",
+    functionFragment: "getPastTotalSupply",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getPastVotes",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getVotes", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "increaseAllowance",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "joePair", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "joeRouter", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "previousBuyBackTime",
+    functionFragment: "minTokensBeforeSwap",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "nonces", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "numCheckpoints",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "permit", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setFee", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "setLpPair", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "renounceRole",
+    functionFragment: "setMinTokensBeforeSwap",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setSwapAndLiquifyEnabled",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -201,6 +263,11 @@ export interface BobtailInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "timeShareBalanceOf",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "timeShares", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "totalSupply",
     data: BytesLike
@@ -214,27 +281,34 @@ export interface BobtailInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "wavax", data: BytesLike): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
+    "DelegateChanged(address,address,address)": EventFragment;
+    "DelegateVotesChanged(address,uint256,uint256)": EventFragment;
+    "FeePercentageUpdated(uint32)": EventFragment;
+    "LpPairsUpdated(address,bool)": EventFragment;
+    "MinTokensBeforeSwapUpdated(uint128)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
-    "RoleGranted(bytes32,address,address)": EventFragment;
-    "RoleRevoked(bytes32,address,address)": EventFragment;
+    "SwapAndLiquify(uint256,uint256,uint256)": EventFragment;
     "SwapAndLiquifyEnabledUpdated(bool)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
+    "UpdateTimeShare(address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "DelegateChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "DelegateVotesChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "FeePercentageUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "LpPairsUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "MinTokensBeforeSwapUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SwapAndLiquify"): EventFragment;
   getEvent(
     nameOrSignatureOrTopic: "SwapAndLiquifyEnabledUpdated"
   ): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateTimeShare"): EventFragment;
 }
 
 export type ApprovalEvent = TypedEvent<
@@ -244,6 +318,44 @@ export type ApprovalEvent = TypedEvent<
 
 export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
 
+export type DelegateChangedEvent = TypedEvent<
+  [string, string, string],
+  { delegator: string; fromDelegate: string; toDelegate: string }
+>;
+
+export type DelegateChangedEventFilter = TypedEventFilter<DelegateChangedEvent>;
+
+export type DelegateVotesChangedEvent = TypedEvent<
+  [string, BigNumber, BigNumber],
+  { delegate: string; previousBalance: BigNumber; newBalance: BigNumber }
+>;
+
+export type DelegateVotesChangedEventFilter =
+  TypedEventFilter<DelegateVotesChangedEvent>;
+
+export type FeePercentageUpdatedEvent = TypedEvent<
+  [number],
+  { feePercentage: number }
+>;
+
+export type FeePercentageUpdatedEventFilter =
+  TypedEventFilter<FeePercentageUpdatedEvent>;
+
+export type LpPairsUpdatedEvent = TypedEvent<
+  [string, boolean],
+  { pair: string; enabled: boolean }
+>;
+
+export type LpPairsUpdatedEventFilter = TypedEventFilter<LpPairsUpdatedEvent>;
+
+export type MinTokensBeforeSwapUpdatedEvent = TypedEvent<
+  [BigNumber],
+  { minTokensBeforeSwap: BigNumber }
+>;
+
+export type MinTokensBeforeSwapUpdatedEventFilter =
+  TypedEventFilter<MinTokensBeforeSwapUpdatedEvent>;
+
 export type OwnershipTransferredEvent = TypedEvent<
   [string, string],
   { previousOwner: string; newOwner: string }
@@ -252,27 +364,16 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export type RoleAdminChangedEvent = TypedEvent<
-  [string, string, string],
-  { role: string; previousAdminRole: string; newAdminRole: string }
+export type SwapAndLiquifyEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber],
+  {
+    tokensSwapped: BigNumber;
+    ethReceived: BigNumber;
+    tokensIntoLiqudity: BigNumber;
+  }
 >;
 
-export type RoleAdminChangedEventFilter =
-  TypedEventFilter<RoleAdminChangedEvent>;
-
-export type RoleGrantedEvent = TypedEvent<
-  [string, string, string],
-  { role: string; account: string; sender: string }
->;
-
-export type RoleGrantedEventFilter = TypedEventFilter<RoleGrantedEvent>;
-
-export type RoleRevokedEvent = TypedEvent<
-  [string, string, string],
-  { role: string; account: string; sender: string }
->;
-
-export type RoleRevokedEventFilter = TypedEventFilter<RoleRevokedEvent>;
+export type SwapAndLiquifyEventFilter = TypedEventFilter<SwapAndLiquifyEvent>;
 
 export type SwapAndLiquifyEnabledUpdatedEvent = TypedEvent<
   [boolean],
@@ -288,6 +389,13 @@ export type TransferEvent = TypedEvent<
 >;
 
 export type TransferEventFilter = TypedEventFilter<TransferEvent>;
+
+export type UpdateTimeShareEvent = TypedEvent<
+  [string, BigNumber],
+  { owner: string; balance: BigNumber }
+>;
+
+export type UpdateTimeShareEventFilter = TypedEventFilter<UpdateTimeShareEvent>;
 
 export interface Bobtail extends BaseContract {
   contractName: "Bobtail";
@@ -317,7 +425,7 @@ export interface Bobtail extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
 
     allowance(
       owner: string,
@@ -331,12 +439,13 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    balanceOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    balanceOf(account: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    bboneToken(overrides?: CallOverrides): Promise<[string]>;
+    checkpoints(
+      account: string,
+      pos: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[ERC20Votes.CheckpointStructOutput]>;
 
     decimals(overrides?: CallOverrides): Promise<[number]>;
 
@@ -346,21 +455,37 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    durationBetweenEachBuyback(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
-
-    grantRole(
-      role: BytesLike,
-      account: string,
+    delegate(
+      delegatee: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
+    delegateBySig(
+      delegatee: string,
+      nonce: BigNumberish,
+      expiry: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    delegates(account: string, overrides?: CallOverrides): Promise<[string]>;
+
+    feePercentage(overrides?: CallOverrides): Promise<[number]>;
+
+    getPastTotalSupply(
+      blockNumber: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[boolean]>;
+    ): Promise<[BigNumber]>;
+
+    getPastVotes(
+      account: string,
+      blockNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    getVotes(account: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     increaseAllowance(
       spender: string,
@@ -370,27 +495,47 @@ export interface Bobtail extends BaseContract {
 
     joePair(overrides?: CallOverrides): Promise<[string]>;
 
-    joeRouter(overrides?: CallOverrides): Promise<[string]>;
+    minTokensBeforeSwap(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     name(overrides?: CallOverrides): Promise<[string]>;
 
+    nonces(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    numCheckpoints(
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<[number]>;
+
     owner(overrides?: CallOverrides): Promise<[string]>;
 
-    previousBuyBackTime(overrides?: CallOverrides): Promise<[BigNumber]>;
+    permit(
+      owner: string,
+      spender: string,
+      value: BigNumberish,
+      deadline: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
+    setFee(
+      _feePercentage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    setLpPair(
+      _pair: string,
+      _enabled: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setMinTokensBeforeSwap(
+      _minTokensBeforeSwap: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -399,26 +544,36 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
     swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<[boolean]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
+    timeShareBalanceOf(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber] & { holdingDuration: BigNumber }>;
+
+    timeShares(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & {
+        lastBlockTimestamp: BigNumber;
+        lastBalance: BigNumber;
+      }
+    >;
+
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     transfer(
-      _recipient: string,
-      _amount: BigNumberish,
+      to: string,
+      amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     transferFrom(
-      sender: string,
-      recipient: string,
+      from: string,
+      to: string,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -427,11 +582,9 @@ export interface Bobtail extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    wavax(overrides?: CallOverrides): Promise<[string]>;
   };
 
-  DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
+  DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
   allowance(
     owner: string,
@@ -445,9 +598,13 @@ export interface Bobtail extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  balanceOf(_account: string, overrides?: CallOverrides): Promise<BigNumber>;
+  balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-  bboneToken(overrides?: CallOverrides): Promise<string>;
+  checkpoints(
+    account: string,
+    pos: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<ERC20Votes.CheckpointStructOutput>;
 
   decimals(overrides?: CallOverrides): Promise<number>;
 
@@ -457,21 +614,37 @@ export interface Bobtail extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  durationBetweenEachBuyback(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
-
-  grantRole(
-    role: BytesLike,
-    account: string,
+  delegate(
+    delegatee: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  hasRole(
-    role: BytesLike,
-    account: string,
+  delegateBySig(
+    delegatee: string,
+    nonce: BigNumberish,
+    expiry: BigNumberish,
+    v: BigNumberish,
+    r: BytesLike,
+    s: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  delegates(account: string, overrides?: CallOverrides): Promise<string>;
+
+  feePercentage(overrides?: CallOverrides): Promise<number>;
+
+  getPastTotalSupply(
+    blockNumber: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<boolean>;
+  ): Promise<BigNumber>;
+
+  getPastVotes(
+    account: string,
+    blockNumber: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  getVotes(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   increaseAllowance(
     spender: string,
@@ -481,27 +654,44 @@ export interface Bobtail extends BaseContract {
 
   joePair(overrides?: CallOverrides): Promise<string>;
 
-  joeRouter(overrides?: CallOverrides): Promise<string>;
+  minTokensBeforeSwap(overrides?: CallOverrides): Promise<BigNumber>;
 
   name(overrides?: CallOverrides): Promise<string>;
 
+  nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+  numCheckpoints(account: string, overrides?: CallOverrides): Promise<number>;
+
   owner(overrides?: CallOverrides): Promise<string>;
 
-  previousBuyBackTime(overrides?: CallOverrides): Promise<BigNumber>;
+  permit(
+    owner: string,
+    spender: string,
+    value: BigNumberish,
+    deadline: BigNumberish,
+    v: BigNumberish,
+    r: BytesLike,
+    s: BytesLike,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  renounceRole(
-    role: BytesLike,
-    account: string,
+  setFee(
+    _feePercentage: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  revokeRole(
-    role: BytesLike,
-    account: string,
+  setLpPair(
+    _pair: string,
+    _enabled: boolean,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setMinTokensBeforeSwap(
+    _minTokensBeforeSwap: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -510,26 +700,36 @@ export interface Bobtail extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  supportsInterface(
-    interfaceId: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
   swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<boolean>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
 
+  timeShareBalanceOf(
+    _address: string,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
+  timeShares(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber] & {
+      lastBlockTimestamp: BigNumber;
+      lastBalance: BigNumber;
+    }
+  >;
+
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
   transfer(
-    _recipient: string,
-    _amount: BigNumberish,
+    to: string,
+    amount: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   transferFrom(
-    sender: string,
-    recipient: string,
+    from: string,
+    to: string,
     amount: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -539,10 +739,8 @@ export interface Bobtail extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  wavax(overrides?: CallOverrides): Promise<string>;
-
   callStatic: {
-    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
 
     allowance(
       owner: string,
@@ -556,9 +754,13 @@ export interface Bobtail extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    balanceOf(_account: string, overrides?: CallOverrides): Promise<BigNumber>;
+    balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    bboneToken(overrides?: CallOverrides): Promise<string>;
+    checkpoints(
+      account: string,
+      pos: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<ERC20Votes.CheckpointStructOutput>;
 
     decimals(overrides?: CallOverrides): Promise<number>;
 
@@ -568,21 +770,34 @@ export interface Bobtail extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    durationBetweenEachBuyback(overrides?: CallOverrides): Promise<BigNumber>;
+    delegate(delegatee: string, overrides?: CallOverrides): Promise<void>;
 
-    getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
-
-    grantRole(
-      role: BytesLike,
-      account: string,
+    delegateBySig(
+      delegatee: string,
+      nonce: BigNumberish,
+      expiry: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
+    delegates(account: string, overrides?: CallOverrides): Promise<string>;
+
+    feePercentage(overrides?: CallOverrides): Promise<number>;
+
+    getPastTotalSupply(
+      blockNumber: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<BigNumber>;
+
+    getPastVotes(
+      account: string,
+      blockNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getVotes(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     increaseAllowance(
       spender: string,
@@ -592,25 +807,42 @@ export interface Bobtail extends BaseContract {
 
     joePair(overrides?: CallOverrides): Promise<string>;
 
-    joeRouter(overrides?: CallOverrides): Promise<string>;
+    minTokensBeforeSwap(overrides?: CallOverrides): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<string>;
 
+    nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    numCheckpoints(account: string, overrides?: CallOverrides): Promise<number>;
+
     owner(overrides?: CallOverrides): Promise<string>;
 
-    previousBuyBackTime(overrides?: CallOverrides): Promise<BigNumber>;
-
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    renounceRole(
-      role: BytesLike,
-      account: string,
+    permit(
+      owner: string,
+      spender: string,
+      value: BigNumberish,
+      deadline: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    setFee(
+      _feePercentage: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setLpPair(
+      _pair: string,
+      _enabled: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setMinTokensBeforeSwap(
+      _minTokensBeforeSwap: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -619,26 +851,36 @@ export interface Bobtail extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
     swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<boolean>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
 
+    timeShareBalanceOf(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    timeShares(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & {
+        lastBlockTimestamp: BigNumber;
+        lastBalance: BigNumber;
+      }
+    >;
+
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
     transfer(
-      _recipient: string,
-      _amount: BigNumberish,
+      to: string,
+      amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
     transferFrom(
-      sender: string,
-      recipient: string,
+      from: string,
+      to: string,
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
@@ -647,8 +889,6 @@ export interface Bobtail extends BaseContract {
       newOwner: string,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    wavax(overrides?: CallOverrides): Promise<string>;
   };
 
   filters: {
@@ -663,6 +903,46 @@ export interface Bobtail extends BaseContract {
       value?: null
     ): ApprovalEventFilter;
 
+    "DelegateChanged(address,address,address)"(
+      delegator?: string | null,
+      fromDelegate?: string | null,
+      toDelegate?: string | null
+    ): DelegateChangedEventFilter;
+    DelegateChanged(
+      delegator?: string | null,
+      fromDelegate?: string | null,
+      toDelegate?: string | null
+    ): DelegateChangedEventFilter;
+
+    "DelegateVotesChanged(address,uint256,uint256)"(
+      delegate?: string | null,
+      previousBalance?: null,
+      newBalance?: null
+    ): DelegateVotesChangedEventFilter;
+    DelegateVotesChanged(
+      delegate?: string | null,
+      previousBalance?: null,
+      newBalance?: null
+    ): DelegateVotesChangedEventFilter;
+
+    "FeePercentageUpdated(uint32)"(
+      feePercentage?: null
+    ): FeePercentageUpdatedEventFilter;
+    FeePercentageUpdated(feePercentage?: null): FeePercentageUpdatedEventFilter;
+
+    "LpPairsUpdated(address,bool)"(
+      pair?: null,
+      enabled?: null
+    ): LpPairsUpdatedEventFilter;
+    LpPairsUpdated(pair?: null, enabled?: null): LpPairsUpdatedEventFilter;
+
+    "MinTokensBeforeSwapUpdated(uint128)"(
+      minTokensBeforeSwap?: null
+    ): MinTokensBeforeSwapUpdatedEventFilter;
+    MinTokensBeforeSwapUpdated(
+      minTokensBeforeSwap?: null
+    ): MinTokensBeforeSwapUpdatedEventFilter;
+
     "OwnershipTransferred(address,address)"(
       previousOwner?: string | null,
       newOwner?: string | null
@@ -672,38 +952,16 @@ export interface Bobtail extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "RoleAdminChanged(bytes32,bytes32,bytes32)"(
-      role?: BytesLike | null,
-      previousAdminRole?: BytesLike | null,
-      newAdminRole?: BytesLike | null
-    ): RoleAdminChangedEventFilter;
-    RoleAdminChanged(
-      role?: BytesLike | null,
-      previousAdminRole?: BytesLike | null,
-      newAdminRole?: BytesLike | null
-    ): RoleAdminChangedEventFilter;
-
-    "RoleGranted(bytes32,address,address)"(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): RoleGrantedEventFilter;
-    RoleGranted(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): RoleGrantedEventFilter;
-
-    "RoleRevoked(bytes32,address,address)"(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): RoleRevokedEventFilter;
-    RoleRevoked(
-      role?: BytesLike | null,
-      account?: string | null,
-      sender?: string | null
-    ): RoleRevokedEventFilter;
+    "SwapAndLiquify(uint256,uint256,uint256)"(
+      tokensSwapped?: null,
+      ethReceived?: null,
+      tokensIntoLiqudity?: null
+    ): SwapAndLiquifyEventFilter;
+    SwapAndLiquify(
+      tokensSwapped?: null,
+      ethReceived?: null,
+      tokensIntoLiqudity?: null
+    ): SwapAndLiquifyEventFilter;
 
     "SwapAndLiquifyEnabledUpdated(bool)"(
       enabled?: null
@@ -722,10 +980,19 @@ export interface Bobtail extends BaseContract {
       to?: string | null,
       value?: null
     ): TransferEventFilter;
+
+    "UpdateTimeShare(address,uint256)"(
+      owner?: string | null,
+      balance?: null
+    ): UpdateTimeShareEventFilter;
+    UpdateTimeShare(
+      owner?: string | null,
+      balance?: null
+    ): UpdateTimeShareEventFilter;
   };
 
   estimateGas: {
-    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
 
     allowance(
       owner: string,
@@ -739,9 +1006,13 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    balanceOf(_account: string, overrides?: CallOverrides): Promise<BigNumber>;
+    balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
-    bboneToken(overrides?: CallOverrides): Promise<BigNumber>;
+    checkpoints(
+      account: string,
+      pos: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     decimals(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -751,24 +1022,37 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    durationBetweenEachBuyback(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getRoleAdmin(
-      role: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    grantRole(
-      role: BytesLike,
-      account: string,
+    delegate(
+      delegatee: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    hasRole(
-      role: BytesLike,
-      account: string,
+    delegateBySig(
+      delegatee: string,
+      nonce: BigNumberish,
+      expiry: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    delegates(account: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    feePercentage(overrides?: CallOverrides): Promise<BigNumber>;
+
+    getPastTotalSupply(
+      blockNumber: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    getPastVotes(
+      account: string,
+      blockNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getVotes(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     increaseAllowance(
       spender: string,
@@ -778,27 +1062,47 @@ export interface Bobtail extends BaseContract {
 
     joePair(overrides?: CallOverrides): Promise<BigNumber>;
 
-    joeRouter(overrides?: CallOverrides): Promise<BigNumber>;
+    minTokensBeforeSwap(overrides?: CallOverrides): Promise<BigNumber>;
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
 
+    nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    numCheckpoints(
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
-    previousBuyBackTime(overrides?: CallOverrides): Promise<BigNumber>;
+    permit(
+      owner: string,
+      spender: string,
+      value: BigNumberish,
+      deadline: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
+    setFee(
+      _feePercentage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    setLpPair(
+      _pair: string,
+      _enabled: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setMinTokensBeforeSwap(
+      _minTokensBeforeSwap: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -807,26 +1111,28 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
+    timeShareBalanceOf(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    timeShares(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
     transfer(
-      _recipient: string,
-      _amount: BigNumberish,
+      to: string,
+      amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     transferFrom(
-      sender: string,
-      recipient: string,
+      from: string,
+      to: string,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -835,14 +1141,10 @@ export interface Bobtail extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    wavax(overrides?: CallOverrides): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    DEFAULT_ADMIN_ROLE(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     allowance(
       owner: string,
@@ -857,11 +1159,15 @@ export interface Bobtail extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     balanceOf(
-      _account: string,
+      account: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    bboneToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    checkpoints(
+      account: string,
+      pos: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -871,23 +1177,40 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    durationBetweenEachBuyback(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getRoleAdmin(
-      role: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    grantRole(
-      role: BytesLike,
-      account: string,
+    delegate(
+      delegatee: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    hasRole(
-      role: BytesLike,
+    delegateBySig(
+      delegatee: string,
+      nonce: BigNumberish,
+      expiry: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    delegates(
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    feePercentage(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getPastTotalSupply(
+      blockNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getPastVotes(
+      account: string,
+      blockNumber: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getVotes(
       account: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -900,29 +1223,52 @@ export interface Bobtail extends BaseContract {
 
     joePair(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    joeRouter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    minTokensBeforeSwap(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    nonces(
+      owner: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    numCheckpoints(
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    previousBuyBackTime(
-      overrides?: CallOverrides
+    permit(
+      owner: string,
+      spender: string,
+      value: BigNumberish,
+      deadline: BigNumberish,
+      v: BigNumberish,
+      r: BytesLike,
+      s: BytesLike,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    renounceRole(
-      role: BytesLike,
-      account: string,
+    setFee(
+      _feePercentage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    revokeRole(
-      role: BytesLike,
-      account: string,
+    setLpPair(
+      _pair: string,
+      _enabled: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setMinTokensBeforeSwap(
+      _minTokensBeforeSwap: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -931,28 +1277,33 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    supportsInterface(
-      interfaceId: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     swapAndLiquifyEnabled(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    timeShareBalanceOf(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    timeShares(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     transfer(
-      _recipient: string,
-      _amount: BigNumberish,
+      to: string,
+      amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     transferFrom(
-      sender: string,
-      recipient: string,
+      from: string,
+      to: string,
       amount: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
@@ -961,7 +1312,5 @@ export interface Bobtail extends BaseContract {
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
-
-    wavax(overrides?: CallOverrides): Promise<PopulatedTransaction>;
   };
 }

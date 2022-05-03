@@ -1,0 +1,22 @@
+@startuml Minting
+
+!theme materia
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxmessagesize 160
+skinparam classFontSize 15
+skinparam defaultFontName Open Sans Semibold
+
+actor "User(s)" as User
+participant "Bobtail" as Bobtail
+participant "BBone Contract" as BBone
+participant "TraderJoe Contract" as TraderJoe
+
+User -> Bobtail: Buy or sell
+User <-- Bobtail: 98% as Bobtail
+Bobtail -> TraderJoe: Swap 2% to AVAX
+TraderJoe --> BBone: Transfer AVAX
+BBone --> BBone: Mint BBone
+BBone -> TraderJoe: Add liquidity BBone/AVAX
+BBone <-- TraderJoe: Lock liquidity
+@enduml

@@ -18,7 +18,7 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export declare namespace FlappyAVAX {
+export declare namespace IBobtailNFT {
   export type NftEntityExtendedStruct = {
     lvl: BigNumberish;
     exp: BigNumberish;
@@ -28,7 +28,6 @@ export declare namespace FlappyAVAX {
     rarity: BigNumberish;
     id: BigNumberish;
     timestampMint: BigNumberish;
-    timestampStake: BigNumberish;
     pendingReward: BigNumberish;
   };
 
@@ -36,7 +35,6 @@ export declare namespace FlappyAVAX {
     number,
     number,
     number,
-    BigNumber,
     BigNumber,
     BigNumber,
     BigNumber,
@@ -52,65 +50,86 @@ export declare namespace FlappyAVAX {
     rarity: BigNumber;
     id: BigNumber;
     timestampMint: BigNumber;
-    timestampStake: BigNumber;
     pendingReward: BigNumber;
+  };
+
+  export type NftEntityStruct = {
+    lvl: BigNumberish;
+    exp: BigNumberish;
+    timestampMint: BigNumberish;
+    block: BigNumberish;
+  };
+
+  export type NftEntityStructOutput = [number, number, BigNumber, BigNumber] & {
+    lvl: number;
+    exp: number;
+    timestampMint: BigNumber;
+    block: BigNumber;
   };
 }
 
 export interface FlappyAVAXInterface extends utils.Interface {
   contractName: "FlappyAVAX";
   functions: {
-    "activeMatchsCount(string)": FunctionFragment;
+    "MAX_LEVELXP()": FunctionFragment;
+    "MAX_MINTSPERTX()": FunctionFragment;
+    "MAX_SUPPLY()": FunctionFragment;
+    "MINT_PRICE_AVAX()": FunctionFragment;
+    "ONE_EXP_PER_TIME()": FunctionFragment;
+    "REVEAL_TIME()": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "baseSupply()": FunctionFragment;
     "bbone()": FunctionFragment;
-    "claimReward(uint256[],uint256[],bytes32,bytes32,uint8)": FunctionFragment;
-    "currentMatchForAddress(address)": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
-    "getTokenInfo(uint256)": FunctionFragment;
+    "getLevelAndExp(uint256)": FunctionFragment;
+    "getTokensInfo(uint256[])": FunctionFragment;
     "isApprovedForAll(address,address)": FunctionFragment;
-    "joeRouter()": FunctionFragment;
-    "joinMatch(uint256,string)": FunctionFragment;
-    "lastMatchIdClaimedForAccount(address)": FunctionFragment;
-    "mainSigner()": FunctionFragment;
-    "matchForAddress(address)": FunctionFragment;
-    "matchIdCounter()": FunctionFragment;
-    "matchSlots(string,uint256)": FunctionFragment;
-    "matchs(uint256)": FunctionFragment;
-    "matchsPerRegionServer()": FunctionFragment;
-    "maxPlayersPerMatch()": FunctionFragment;
-    "maxStakingTokensPerAccount()": FunctionFragment;
+    "isRevealed(uint256)": FunctionFragment;
     "mintWithAvax(address,uint256)": FunctionFragment;
     "name()": FunctionFragment;
+    "owner()": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
-    "pairBboneAvax()": FunctionFragment;
-    "rewardPerMinute()": FunctionFragment;
+    "renounceOwnership()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
-    "serverRegions(string)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
-    "setMatchDuration(uint256)": FunctionFragment;
-    "setMatchsPerRegion(uint256)": FunctionFragment;
-    "setMaxPlayersPerMatch(uint256)": FunctionFragment;
-    "setServerRegion(string,bool)": FunctionFragment;
-    "stake(uint256[])": FunctionFragment;
-    "stakedTokensOf(address)": FunctionFragment;
-    "stakedTokensWithInfoOf(address)": FunctionFragment;
-    "stakingCountForAddress(address)": FunctionFragment;
+    "setLevelAndExp(uint256,uint8,uint8)": FunctionFragment;
+    "setStakingManager(address)": FunctionFragment;
+    "stakingManager()": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
+    "tokenInfo(uint256)": FunctionFragment;
+    "tokenInfoExtended(uint256)": FunctionFragment;
     "tokenURI(uint256)": FunctionFragment;
     "tokensOf(address)": FunctionFragment;
     "tokensWithInfoOf(address)": FunctionFragment;
-    "totalRewardPerMatch()": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
-    "updateRewards(uint256[])": FunctionFragment;
-    "withdraw(uint256[],bool)": FunctionFragment;
+    "transferOwnership(address)": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "activeMatchsCount",
-    values: [string]
+    functionFragment: "MAX_LEVELXP",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MAX_MINTSPERTX",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MAX_SUPPLY",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "MINT_PRICE_AVAX",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ONE_EXP_PER_TIME",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "REVEAL_TIME",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "approve",
@@ -123,81 +142,37 @@ export interface FlappyAVAXInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "bbone", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "claimReward",
-    values: [BigNumberish[], BigNumberish[], BytesLike, BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "currentMatchForAddress",
-    values: [string]
-  ): string;
-  encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "getTokenInfo",
+    functionFragment: "getLevelAndExp",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getTokensInfo",
+    values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "isApprovedForAll",
     values: [string, string]
   ): string;
-  encodeFunctionData(functionFragment: "joeRouter", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "joinMatch",
-    values: [BigNumberish, string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "lastMatchIdClaimedForAccount",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "mainSigner",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "matchForAddress",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "matchIdCounter",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "matchSlots",
-    values: [string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "matchs",
+    functionFragment: "isRevealed",
     values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "matchsPerRegionServer",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "maxPlayersPerMatch",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "maxStakingTokensPerAccount",
-    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "mintWithAvax",
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "ownerOf",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "pairBboneAvax",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "rewardPerMinute",
+    functionFragment: "renounceOwnership",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -205,50 +180,34 @@ export interface FlappyAVAXInterface extends utils.Interface {
     values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "serverRegions",
-    values: [string]
-  ): string;
-  encodeFunctionData(
     functionFragment: "setApprovalForAll",
     values: [string, boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "setMatchDuration",
-    values: [BigNumberish]
+    functionFragment: "setLevelAndExp",
+    values: [BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "setMatchsPerRegion",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setMaxPlayersPerMatch",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setServerRegion",
-    values: [string, boolean]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "stake",
-    values: [BigNumberish[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "stakedTokensOf",
+    functionFragment: "setStakingManager",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "stakedTokensWithInfoOf",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "stakingCountForAddress",
-    values: [string]
+    functionFragment: "stakingManager",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "tokenInfo",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "tokenInfoExtended",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "tokenURI",
     values: [BigNumberish]
@@ -259,24 +218,33 @@ export interface FlappyAVAXInterface extends utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "totalRewardPerMatch",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "transferFrom",
     values: [string, string, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "updateRewards",
-    values: [BigNumberish[]]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "withdraw",
-    values: [BigNumberish[], boolean]
+    functionFragment: "transferOwnership",
+    values: [string]
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "activeMatchsCount",
+    functionFragment: "MAX_LEVELXP",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "MAX_MINTSPERTX",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "MAX_SUPPLY", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "MINT_PRICE_AVAX",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "ONE_EXP_PER_TIME",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "REVEAL_TIME",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
@@ -284,66 +252,31 @@ export interface FlappyAVAXInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "baseSupply", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "bbone", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "claimReward",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "currentMatchForAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "getApproved",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getTokenInfo",
+    functionFragment: "getLevelAndExp",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getTokensInfo",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "isApprovedForAll",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "joeRouter", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "joinMatch", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "lastMatchIdClaimedForAccount",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "mainSigner", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "matchForAddress",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "matchIdCounter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "matchSlots", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "matchs", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "matchsPerRegionServer",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "maxPlayersPerMatch",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "maxStakingTokensPerAccount",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "isRevealed", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "mintWithAvax",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "pairBboneAvax",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "rewardPerMinute",
+    functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -351,40 +284,19 @@ export interface FlappyAVAXInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "serverRegions",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "setApprovalForAll",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setMatchDuration",
+    functionFragment: "setLevelAndExp",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setMatchsPerRegion",
+    functionFragment: "setStakingManager",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setMaxPlayersPerMatch",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setServerRegion",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "stake", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "stakedTokensOf",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "stakedTokensWithInfoOf",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "stakingCountForAddress",
+    functionFragment: "stakingManager",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -392,6 +304,11 @@ export interface FlappyAVAXInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "tokenInfo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "tokenInfoExtended",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "tokenURI", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tokensOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -399,35 +316,30 @@ export interface FlappyAVAXInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "totalRewardPerMatch",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "transferFrom",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "updateRewards",
+    functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "ApprovalForAll(address,address,bool)": EventFragment;
-    "NewAddressInMatch(address,uint256,uint256)": EventFragment;
-    "NewMatch(uint256,uint256,uint256,uint256,uint256)": EventFragment;
+    "LevelAndExpUpdated(uint256,uint8,uint8)": EventFragment;
     "NewMint(uint256,uint256)": EventFragment;
-    "RewardClaimed(address,uint256[],uint256)": EventFragment;
+    "OwnershipTransferred(address,address)": EventFragment;
+    "StakingManagerUpdated(address)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "NewAddressInMatch"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "NewMatch"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "LevelAndExpUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewMint"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "RewardClaimed"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "StakingManagerUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
@@ -445,26 +357,13 @@ export type ApprovalForAllEvent = TypedEvent<
 
 export type ApprovalForAllEventFilter = TypedEventFilter<ApprovalForAllEvent>;
 
-export type NewAddressInMatchEvent = TypedEvent<
-  [string, BigNumber, BigNumber],
-  { player: string; matchId: BigNumber; tokenId: BigNumber }
+export type LevelAndExpUpdatedEvent = TypedEvent<
+  [BigNumber, number, number],
+  { tokenId: BigNumber; lvl: number; exp: number }
 >;
 
-export type NewAddressInMatchEventFilter =
-  TypedEventFilter<NewAddressInMatchEvent>;
-
-export type NewMatchEvent = TypedEvent<
-  [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber],
-  {
-    matchId: BigNumber;
-    slot: BigNumber;
-    timestamp: BigNumber;
-    duration: BigNumber;
-    maxPlayers: BigNumber;
-  }
->;
-
-export type NewMatchEventFilter = TypedEventFilter<NewMatchEvent>;
+export type LevelAndExpUpdatedEventFilter =
+  TypedEventFilter<LevelAndExpUpdatedEvent>;
 
 export type NewMintEvent = TypedEvent<
   [BigNumber, BigNumber],
@@ -473,12 +372,21 @@ export type NewMintEvent = TypedEvent<
 
 export type NewMintEventFilter = TypedEventFilter<NewMintEvent>;
 
-export type RewardClaimedEvent = TypedEvent<
-  [string, BigNumber[], BigNumber],
-  { player: string; matchIds: BigNumber[]; reward: BigNumber }
+export type OwnershipTransferredEvent = TypedEvent<
+  [string, string],
+  { previousOwner: string; newOwner: string }
 >;
 
-export type RewardClaimedEventFilter = TypedEventFilter<RewardClaimedEvent>;
+export type OwnershipTransferredEventFilter =
+  TypedEventFilter<OwnershipTransferredEvent>;
+
+export type StakingManagerUpdatedEvent = TypedEvent<
+  [string],
+  { stakingManager: string }
+>;
+
+export type StakingManagerUpdatedEventFilter =
+  TypedEventFilter<StakingManagerUpdatedEvent>;
 
 export type TransferEvent = TypedEvent<
   [string, string, BigNumber],
@@ -515,10 +423,17 @@ export interface FlappyAVAX extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    activeMatchsCount(
-      _region: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { count: BigNumber }>;
+    MAX_LEVELXP(overrides?: CallOverrides): Promise<[number]>;
+
+    MAX_MINTSPERTX(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    MAX_SUPPLY(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    MINT_PRICE_AVAX(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    ONE_EXP_PER_TIME(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    REVEAL_TIME(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     approve(
       to: string,
@@ -532,29 +447,20 @@ export interface FlappyAVAX extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<[string]>;
 
-    claimReward(
-      _matchIds: BigNumberish[],
-      _ranks: BigNumberish[],
-      r: BytesLike,
-      s: BytesLike,
-      v: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    currentMatchForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    getTokenInfo(
+    getLevelAndExp(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[FlappyAVAX.NftEntityExtendedStructOutput]>;
+    ): Promise<[number, number] & { level: number; exp: number }>;
+
+    getTokensInfo(
+      _tokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput[]]>;
 
     isApprovedForAll(
       owner: string,
@@ -562,61 +468,10 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
-    joeRouter(overrides?: CallOverrides): Promise<[string]>;
-
-    joinMatch(
+    isRevealed(
       _tokenId: BigNumberish,
-      region: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    lastMatchIdClaimedForAccount(
-      arg0: string,
       overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    mainSigner(overrides?: CallOverrides): Promise<[string]>;
-
-    matchForAddress(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, boolean, BigNumber, BigNumber, boolean] & {
-        matchId: BigNumber;
-        finished: boolean;
-        timestamp: BigNumber;
-        duration: BigNumber;
-        inMatch: boolean;
-      }
-    >;
-
-    matchIdCounter(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    matchSlots(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    matchs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, boolean, BigNumber, BigNumber, BigNumber, BigNumber] & {
-        started: boolean;
-        finished: boolean;
-        timestamp: BigNumber;
-        duration: BigNumber;
-        maxPlayers: BigNumber;
-        slot: BigNumber;
-      }
-    >;
-
-    matchsPerRegionServer(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    maxPlayersPerMatch(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    maxStakingTokensPerAccount(overrides?: CallOverrides): Promise<[BigNumber]>;
+    ): Promise<[boolean]>;
 
     mintWithAvax(
       _for: string,
@@ -626,14 +481,16 @@ export interface FlappyAVAX extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<[string]>;
 
+    owner(overrides?: CallOverrides): Promise<[string]>;
+
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[string]>;
 
-    pairBboneAvax(overrides?: CallOverrides): Promise<[string]>;
-
-    rewardPerMinute(overrides?: CallOverrides): Promise<[BigNumber]>;
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -650,54 +507,25 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    serverRegions(arg0: string, overrides?: CallOverrides): Promise<[boolean]>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMatchDuration(
-      _matchDuration: BigNumberish,
+    setLevelAndExp(
+      _tokenId: BigNumberish,
+      _lvl: BigNumberish,
+      _exp: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMatchsPerRegion(
-      _matchsPerRegionServer: BigNumberish,
+    setStakingManager(
+      _stakingManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMaxPlayersPerMatch(
-      _maxPlayersPerMatch: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setServerRegion(
-      _name: string,
-      status: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    stake(
-      _tokenIds: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    stakedTokensOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber[]] & { tokenIds: BigNumber[] }>;
-
-    stakedTokensWithInfoOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<[FlappyAVAX.NftEntityExtendedStructOutput[]]>;
-
-    stakingCountForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    stakingManager(overrides?: CallOverrides): Promise<[string]>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -705,6 +533,16 @@ export interface FlappyAVAX extends BaseContract {
     ): Promise<[boolean]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
+
+    tokenInfo(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[IBobtailNFT.NftEntityStructOutput]>;
+
+    tokenInfoExtended(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput]>;
 
     tokenURI(
       tokenId: BigNumberish,
@@ -719,9 +557,7 @@ export interface FlappyAVAX extends BaseContract {
     tokensWithInfoOf(
       _account: string,
       overrides?: CallOverrides
-    ): Promise<[FlappyAVAX.NftEntityExtendedStructOutput[]]>;
-
-    totalRewardPerMatch(overrides?: CallOverrides): Promise<[BigNumber]>;
+    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput[]]>;
 
     transferFrom(
       from: string,
@@ -730,22 +566,23 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    updateRewards(
-      _portionRewardPerRank: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    withdraw(
-      _tokenIds: BigNumberish[],
-      _unstake: boolean,
+    transferOwnership(
+      newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
 
-  activeMatchsCount(
-    _region: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  MAX_LEVELXP(overrides?: CallOverrides): Promise<number>;
+
+  MAX_MINTSPERTX(overrides?: CallOverrides): Promise<BigNumber>;
+
+  MAX_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+
+  MINT_PRICE_AVAX(overrides?: CallOverrides): Promise<BigNumber>;
+
+  ONE_EXP_PER_TIME(overrides?: CallOverrides): Promise<BigNumber>;
+
+  REVEAL_TIME(overrides?: CallOverrides): Promise<BigNumber>;
 
   approve(
     to: string,
@@ -759,29 +596,20 @@ export interface FlappyAVAX extends BaseContract {
 
   bbone(overrides?: CallOverrides): Promise<string>;
 
-  claimReward(
-    _matchIds: BigNumberish[],
-    _ranks: BigNumberish[],
-    r: BytesLike,
-    s: BytesLike,
-    v: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  currentMatchForAddress(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
   getApproved(
     tokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<string>;
 
-  getTokenInfo(
+  getLevelAndExp(
     _tokenId: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<FlappyAVAX.NftEntityExtendedStructOutput>;
+  ): Promise<[number, number] & { level: number; exp: number }>;
+
+  getTokensInfo(
+    _tokenIds: BigNumberish[],
+    overrides?: CallOverrides
+  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
 
   isApprovedForAll(
     owner: string,
@@ -789,61 +617,10 @@ export interface FlappyAVAX extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
-  joeRouter(overrides?: CallOverrides): Promise<string>;
-
-  joinMatch(
+  isRevealed(
     _tokenId: BigNumberish,
-    region: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  lastMatchIdClaimedForAccount(
-    arg0: string,
     overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  mainSigner(overrides?: CallOverrides): Promise<string>;
-
-  matchForAddress(
-    _address: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, boolean, BigNumber, BigNumber, boolean] & {
-      matchId: BigNumber;
-      finished: boolean;
-      timestamp: BigNumber;
-      duration: BigNumber;
-      inMatch: boolean;
-    }
-  >;
-
-  matchIdCounter(overrides?: CallOverrides): Promise<BigNumber>;
-
-  matchSlots(
-    arg0: string,
-    arg1: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  matchs(
-    arg0: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<
-    [boolean, boolean, BigNumber, BigNumber, BigNumber, BigNumber] & {
-      started: boolean;
-      finished: boolean;
-      timestamp: BigNumber;
-      duration: BigNumber;
-      maxPlayers: BigNumber;
-      slot: BigNumber;
-    }
-  >;
-
-  matchsPerRegionServer(overrides?: CallOverrides): Promise<BigNumber>;
-
-  maxPlayersPerMatch(overrides?: CallOverrides): Promise<BigNumber>;
-
-  maxStakingTokensPerAccount(overrides?: CallOverrides): Promise<BigNumber>;
+  ): Promise<boolean>;
 
   mintWithAvax(
     _for: string,
@@ -853,11 +630,13 @@ export interface FlappyAVAX extends BaseContract {
 
   name(overrides?: CallOverrides): Promise<string>;
 
+  owner(overrides?: CallOverrides): Promise<string>;
+
   ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-  pairBboneAvax(overrides?: CallOverrides): Promise<string>;
-
-  rewardPerMinute(overrides?: CallOverrides): Promise<BigNumber>;
+  renounceOwnership(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   "safeTransferFrom(address,address,uint256)"(
     from: string,
@@ -874,54 +653,25 @@ export interface FlappyAVAX extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  serverRegions(arg0: string, overrides?: CallOverrides): Promise<boolean>;
-
   setApprovalForAll(
     operator: string,
     approved: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMatchDuration(
-    _matchDuration: BigNumberish,
+  setLevelAndExp(
+    _tokenId: BigNumberish,
+    _lvl: BigNumberish,
+    _exp: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMatchsPerRegion(
-    _matchsPerRegionServer: BigNumberish,
+  setStakingManager(
+    _stakingManager: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMaxPlayersPerMatch(
-    _maxPlayersPerMatch: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setServerRegion(
-    _name: string,
-    status: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  stake(
-    _tokenIds: BigNumberish[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  stakedTokensOf(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber[]>;
-
-  stakedTokensWithInfoOf(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<FlappyAVAX.NftEntityExtendedStructOutput[]>;
-
-  stakingCountForAddress(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  stakingManager(overrides?: CallOverrides): Promise<string>;
 
   supportsInterface(
     interfaceId: BytesLike,
@@ -930,6 +680,16 @@ export interface FlappyAVAX extends BaseContract {
 
   symbol(overrides?: CallOverrides): Promise<string>;
 
+  tokenInfo(
+    _tokenId: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<IBobtailNFT.NftEntityStructOutput>;
+
+  tokenInfoExtended(
+    _tokenId: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput>;
+
   tokenURI(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
   tokensOf(_account: string, overrides?: CallOverrides): Promise<BigNumber[]>;
@@ -937,9 +697,7 @@ export interface FlappyAVAX extends BaseContract {
   tokensWithInfoOf(
     _account: string,
     overrides?: CallOverrides
-  ): Promise<FlappyAVAX.NftEntityExtendedStructOutput[]>;
-
-  totalRewardPerMatch(overrides?: CallOverrides): Promise<BigNumber>;
+  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
 
   transferFrom(
     from: string,
@@ -948,22 +706,23 @@ export interface FlappyAVAX extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  updateRewards(
-    _portionRewardPerRank: BigNumberish[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  withdraw(
-    _tokenIds: BigNumberish[],
-    _unstake: boolean,
+  transferOwnership(
+    newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    activeMatchsCount(
-      _region: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    MAX_LEVELXP(overrides?: CallOverrides): Promise<number>;
+
+    MAX_MINTSPERTX(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MAX_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MINT_PRICE_AVAX(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ONE_EXP_PER_TIME(overrides?: CallOverrides): Promise<BigNumber>;
+
+    REVEAL_TIME(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
       to: string,
@@ -977,29 +736,20 @@ export interface FlappyAVAX extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<string>;
 
-    claimReward(
-      _matchIds: BigNumberish[],
-      _ranks: BigNumberish[],
-      r: BytesLike,
-      s: BytesLike,
-      v: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    currentMatchForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<string>;
 
-    getTokenInfo(
+    getLevelAndExp(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<FlappyAVAX.NftEntityExtendedStructOutput>;
+    ): Promise<[number, number] & { level: number; exp: number }>;
+
+    getTokensInfo(
+      _tokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
 
     isApprovedForAll(
       owner: string,
@@ -1007,61 +757,10 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    joeRouter(overrides?: CallOverrides): Promise<string>;
-
-    joinMatch(
+    isRevealed(
       _tokenId: BigNumberish,
-      region: string,
       overrides?: CallOverrides
-    ): Promise<void>;
-
-    lastMatchIdClaimedForAccount(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    mainSigner(overrides?: CallOverrides): Promise<string>;
-
-    matchForAddress(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, boolean, BigNumber, BigNumber, boolean] & {
-        matchId: BigNumber;
-        finished: boolean;
-        timestamp: BigNumber;
-        duration: BigNumber;
-        inMatch: boolean;
-      }
-    >;
-
-    matchIdCounter(overrides?: CallOverrides): Promise<BigNumber>;
-
-    matchSlots(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    matchs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<
-      [boolean, boolean, BigNumber, BigNumber, BigNumber, BigNumber] & {
-        started: boolean;
-        finished: boolean;
-        timestamp: BigNumber;
-        duration: BigNumber;
-        maxPlayers: BigNumber;
-        slot: BigNumber;
-      }
-    >;
-
-    matchsPerRegionServer(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxPlayersPerMatch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxStakingTokensPerAccount(overrides?: CallOverrides): Promise<BigNumber>;
+    ): Promise<boolean>;
 
     mintWithAvax(
       _for: string,
@@ -1071,11 +770,11 @@ export interface FlappyAVAX extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<string>;
 
+    owner(overrides?: CallOverrides): Promise<string>;
+
     ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
-    pairBboneAvax(overrides?: CallOverrides): Promise<string>;
-
-    rewardPerMinute(overrides?: CallOverrides): Promise<BigNumber>;
+    renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1092,51 +791,25 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    serverRegions(arg0: string, overrides?: CallOverrides): Promise<boolean>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setMatchDuration(
-      _matchDuration: BigNumberish,
+    setLevelAndExp(
+      _tokenId: BigNumberish,
+      _lvl: BigNumberish,
+      _exp: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setMatchsPerRegion(
-      _matchsPerRegionServer: BigNumberish,
+    setStakingManager(
+      _stakingManager: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setMaxPlayersPerMatch(
-      _maxPlayersPerMatch: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setServerRegion(
-      _name: string,
-      status: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    stake(_tokenIds: BigNumberish[], overrides?: CallOverrides): Promise<void>;
-
-    stakedTokensOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber[]>;
-
-    stakedTokensWithInfoOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<FlappyAVAX.NftEntityExtendedStructOutput[]>;
-
-    stakingCountForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    stakingManager(overrides?: CallOverrides): Promise<string>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -1145,6 +818,16 @@ export interface FlappyAVAX extends BaseContract {
 
     symbol(overrides?: CallOverrides): Promise<string>;
 
+    tokenInfo(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<IBobtailNFT.NftEntityStructOutput>;
+
+    tokenInfoExtended(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput>;
+
     tokenURI(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
     tokensOf(_account: string, overrides?: CallOverrides): Promise<BigNumber[]>;
@@ -1152,9 +835,7 @@ export interface FlappyAVAX extends BaseContract {
     tokensWithInfoOf(
       _account: string,
       overrides?: CallOverrides
-    ): Promise<FlappyAVAX.NftEntityExtendedStructOutput[]>;
-
-    totalRewardPerMatch(overrides?: CallOverrides): Promise<BigNumber>;
+    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
 
     transferFrom(
       from: string,
@@ -1163,14 +844,8 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    updateRewards(
-      _portionRewardPerRank: BigNumberish[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    withdraw(
-      _tokenIds: BigNumberish[],
-      _unstake: boolean,
+    transferOwnership(
+      newOwner: string,
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -1198,31 +873,16 @@ export interface FlappyAVAX extends BaseContract {
       approved?: null
     ): ApprovalForAllEventFilter;
 
-    "NewAddressInMatch(address,uint256,uint256)"(
-      player?: null,
-      matchId?: null,
-      tokenId?: null
-    ): NewAddressInMatchEventFilter;
-    NewAddressInMatch(
-      player?: null,
-      matchId?: null,
-      tokenId?: null
-    ): NewAddressInMatchEventFilter;
-
-    "NewMatch(uint256,uint256,uint256,uint256,uint256)"(
-      matchId?: null,
-      slot?: null,
-      timestamp?: null,
-      duration?: null,
-      maxPlayers?: null
-    ): NewMatchEventFilter;
-    NewMatch(
-      matchId?: null,
-      slot?: null,
-      timestamp?: null,
-      duration?: null,
-      maxPlayers?: null
-    ): NewMatchEventFilter;
+    "LevelAndExpUpdated(uint256,uint8,uint8)"(
+      tokenId?: null,
+      lvl?: null,
+      exp?: null
+    ): LevelAndExpUpdatedEventFilter;
+    LevelAndExpUpdated(
+      tokenId?: null,
+      lvl?: null,
+      exp?: null
+    ): LevelAndExpUpdatedEventFilter;
 
     "NewMint(uint256,uint256)"(
       mintId?: null,
@@ -1230,16 +890,21 @@ export interface FlappyAVAX extends BaseContract {
     ): NewMintEventFilter;
     NewMint(mintId?: null, timestamp?: null): NewMintEventFilter;
 
-    "RewardClaimed(address,uint256[],uint256)"(
-      player?: null,
-      matchIds?: null,
-      reward?: null
-    ): RewardClaimedEventFilter;
-    RewardClaimed(
-      player?: null,
-      matchIds?: null,
-      reward?: null
-    ): RewardClaimedEventFilter;
+    "OwnershipTransferred(address,address)"(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): OwnershipTransferredEventFilter;
+    OwnershipTransferred(
+      previousOwner?: string | null,
+      newOwner?: string | null
+    ): OwnershipTransferredEventFilter;
+
+    "StakingManagerUpdated(address)"(
+      stakingManager?: null
+    ): StakingManagerUpdatedEventFilter;
+    StakingManagerUpdated(
+      stakingManager?: null
+    ): StakingManagerUpdatedEventFilter;
 
     "Transfer(address,address,uint256)"(
       from?: string | null,
@@ -1254,10 +919,17 @@ export interface FlappyAVAX extends BaseContract {
   };
 
   estimateGas: {
-    activeMatchsCount(
-      _region: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    MAX_LEVELXP(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MAX_MINTSPERTX(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MAX_SUPPLY(overrides?: CallOverrides): Promise<BigNumber>;
+
+    MINT_PRICE_AVAX(overrides?: CallOverrides): Promise<BigNumber>;
+
+    ONE_EXP_PER_TIME(overrides?: CallOverrides): Promise<BigNumber>;
+
+    REVEAL_TIME(overrides?: CallOverrides): Promise<BigNumber>;
 
     approve(
       to: string,
@@ -1271,27 +943,18 @@ export interface FlappyAVAX extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<BigNumber>;
 
-    claimReward(
-      _matchIds: BigNumberish[],
-      _ranks: BigNumberish[],
-      r: BytesLike,
-      s: BytesLike,
-      v: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    currentMatchForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    getTokenInfo(
+    getLevelAndExp(
       _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getTokensInfo(
+      _tokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1301,41 +964,10 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    joeRouter(overrides?: CallOverrides): Promise<BigNumber>;
-
-    joinMatch(
+    isRevealed(
       _tokenId: BigNumberish,
-      region: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    lastMatchIdClaimedForAccount(
-      arg0: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
-
-    mainSigner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    matchForAddress(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    matchIdCounter(overrides?: CallOverrides): Promise<BigNumber>;
-
-    matchSlots(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    matchs(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-
-    matchsPerRegionServer(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxPlayersPerMatch(overrides?: CallOverrides): Promise<BigNumber>;
-
-    maxStakingTokensPerAccount(overrides?: CallOverrides): Promise<BigNumber>;
 
     mintWithAvax(
       _for: string,
@@ -1345,14 +977,16 @@ export interface FlappyAVAX extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<BigNumber>;
 
+    owner(overrides?: CallOverrides): Promise<BigNumber>;
+
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    pairBboneAvax(overrides?: CallOverrides): Promise<BigNumber>;
-
-    rewardPerMinute(overrides?: CallOverrides): Promise<BigNumber>;
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1369,54 +1003,25 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    serverRegions(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMatchDuration(
-      _matchDuration: BigNumberish,
+    setLevelAndExp(
+      _tokenId: BigNumberish,
+      _lvl: BigNumberish,
+      _exp: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMatchsPerRegion(
-      _matchsPerRegionServer: BigNumberish,
+    setStakingManager(
+      _stakingManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMaxPlayersPerMatch(
-      _maxPlayersPerMatch: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setServerRegion(
-      _name: string,
-      status: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    stake(
-      _tokenIds: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    stakedTokensOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    stakedTokensWithInfoOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    stakingCountForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    stakingManager(overrides?: CallOverrides): Promise<BigNumber>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -1424,6 +1029,16 @@ export interface FlappyAVAX extends BaseContract {
     ): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
+
+    tokenInfo(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    tokenInfoExtended(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     tokenURI(
       tokenId: BigNumberish,
@@ -1437,8 +1052,6 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    totalRewardPerMatch(overrides?: CallOverrides): Promise<BigNumber>;
-
     transferFrom(
       from: string,
       to: string,
@@ -1446,23 +1059,24 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    updateRewards(
-      _portionRewardPerRank: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    withdraw(
-      _tokenIds: BigNumberish[],
-      _unstake: boolean,
+    transferOwnership(
+      newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    activeMatchsCount(
-      _region: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    MAX_LEVELXP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    MAX_MINTSPERTX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    MAX_SUPPLY(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    MINT_PRICE_AVAX(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    ONE_EXP_PER_TIME(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    REVEAL_TIME(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     approve(
       to: string,
@@ -1479,27 +1093,18 @@ export interface FlappyAVAX extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    claimReward(
-      _matchIds: BigNumberish[],
-      _ranks: BigNumberish[],
-      r: BytesLike,
-      s: BytesLike,
-      v: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    currentMatchForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getTokenInfo(
+    getLevelAndExp(
       _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getTokensInfo(
+      _tokenIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1509,48 +1114,8 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    joeRouter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    joinMatch(
+    isRevealed(
       _tokenId: BigNumberish,
-      region: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    lastMatchIdClaimedForAccount(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    mainSigner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    matchForAddress(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    matchIdCounter(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    matchSlots(
-      arg0: string,
-      arg1: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    matchs(
-      arg0: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    matchsPerRegionServer(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    maxPlayersPerMatch(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    maxStakingTokensPerAccount(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -1562,14 +1127,16 @@ export interface FlappyAVAX extends BaseContract {
 
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     ownerOf(
       tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    pairBboneAvax(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    rewardPerMinute(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1586,57 +1153,25 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    serverRegions(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     setApprovalForAll(
       operator: string,
       approved: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMatchDuration(
-      _matchDuration: BigNumberish,
+    setLevelAndExp(
+      _tokenId: BigNumberish,
+      _lvl: BigNumberish,
+      _exp: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMatchsPerRegion(
-      _matchsPerRegionServer: BigNumberish,
+    setStakingManager(
+      _stakingManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMaxPlayersPerMatch(
-      _maxPlayersPerMatch: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setServerRegion(
-      _name: string,
-      status: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    stake(
-      _tokenIds: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    stakedTokensOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    stakedTokensWithInfoOf(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    stakingCountForAddress(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    stakingManager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -1644,6 +1179,16 @@ export interface FlappyAVAX extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    tokenInfo(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    tokenInfoExtended(
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     tokenURI(
       tokenId: BigNumberish,
@@ -1660,10 +1205,6 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    totalRewardPerMatch(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     transferFrom(
       from: string,
       to: string,
@@ -1671,14 +1212,8 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    updateRewards(
-      _portionRewardPerRank: BigNumberish[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    withdraw(
-      _tokenIds: BigNumberish[],
-      _unstake: boolean,
+    transferOwnership(
+      newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

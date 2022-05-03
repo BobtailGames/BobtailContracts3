@@ -9,6 +9,13 @@ import "./interfaces/IBBone.sol";
 
 // solhint-disable mark-callable-contracts
 
+/// @title Bobtail Staking Manager 1.0 (StakingManager)
+/// @author 0xPandita
+/// @notice This contract controls the staking status for the Bobtail.games NFT
+/// tokens and pays the reward based on the time staked, this contract only allow
+/// one ERC721 contract, this contract will be updated in the future for a version
+/// 2.0 currently in developmnent
+
 contract Staking is ReentrancyGuard, Ownable {
     modifier onlyEOA() {
         require(msg.sender.code.length == 0, "Only EOA");
@@ -19,39 +26,55 @@ contract Staking is ReentrancyGuard, Ownable {
                                 IMMUTABLES
     //////////////////////////////////////////////////////////////*/
 
-    //We only have one at the moment
-    IBobtailNFT public allowedNftContract;
-    IBobtailMatchManager immutable matchManager;
+    /// @notice The allowed NFT contract to get status of a token
+    IBobtailNFT public immutable allowedNftContract;
 
+    /// @notice The bbone contract to
     IBBone public immutable bbone;
 
-    constructor(address _bbone, address _matchManager) {
+    constructor(address _bbone, address _nftContract) {
         bbone = IBBone(_bbone);
-        matchManager = IBobtailMatchManager(_matchManager);
+        allowedNftContract = IBobtailNFT(_nftContract);
     }
 
     /*///////////////////////////////////////////////////////////////
-                                INITIALIZATION
+                        MATCH MANAGER CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    function initializeContract(address _nftContract) public {
-        allowedNftContract = IBobtailNFT(_nftContract);
+    /// @notice The Bobtail Match Manager to check if a token is in match
+    /// and prevent unstaking
+    IBobtailMatchManager public matchManager;
+
+    event MatchManagerUpdated(address matchDuration);
+
+    /// @notice Set match manager
+    function setMatchManager(address _matchManager) external onlyOwner {
+        // Update match manager
+        matchManager = IBobtailMatchManager(_matchManager);
+        emit MatchManagerUpdated(_matchManager);
     }
 
     /*///////////////////////////////////////////////////////////////
                             REWARD CONFIGURATION
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice The reward to be paid in BBone, for each minute of the staked token
+    /// this is what will be paid, example with default values 10 minutes=10 BBone
     uint256 public rewardPerMinute = 1 ether; // Default 1 BBone
 
+    /// @notice Emitted when the reward per minute is updated.
     event RewardPerMinuteUpdated(uint256 rewardPerMinute);
 
-    /// @notice Emitted after a successful harvest.
+    /// @notice Set new reward per minute
     function setRewardPerMinute(uint256 _rewardPerMinute) public onlyOwner {
+        // Only allow a range of values to prevent exploits
         require(
             _rewardPerMinute > 0 && _rewardPerMinute < 100, // TODO MAX
             "Invalid value"
         );
+        // Update the reward
         rewardPerMinute = _rewardPerMinute;
+
         emit RewardPerMinuteUpdated(_rewardPerMinute);
     }
 
@@ -59,19 +82,23 @@ contract Staking is ReentrancyGuard, Ownable {
                             STAKING CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Max allowed staking tokens for account
+    /// @notice Max allowed staking tokens per account
     uint256 public maxStakingTokensPerAccount = 10;
+
+    /// @notice Emitted when the max allowed staked tokens is updated.
     event MaxStakingTokensPerAccountUpdated(uint256 maxStakingTokensPerAccount);
 
-    /// @notice Emitted after a successful harvest.
+    /// @notice Set max staking tokens
     function setMaxStakingTokensPerAccount(uint256 _maxStakingTokensPerAccount)
         public
         onlyOwner
     {
+        // Only allow a range of values to prevent exploits
         require(
             _maxStakingTokensPerAccount > 0 && _maxStakingTokensPerAccount < 50,
             "Invalid value"
         );
+        // Update max staking tokens per account
         maxStakingTokensPerAccount = _maxStakingTokensPerAccount;
         emit MaxStakingTokensPerAccountUpdated(_maxStakingTokensPerAccount);
     }
@@ -80,7 +107,7 @@ contract Staking is ReentrancyGuard, Ownable {
                        STAKING/UNSTAKING/WITHDRAW LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Deposit a list of token ids owned by sender
+    /// @notice Deposit a list of NFT token ids owned by sender
     function stake(uint256[] calldata _tokenIds) external onlyEOA nonReentrant {
         // Only allow a limited amount of tokens to stake = maxStakingTokensPerAccount
         require(
@@ -88,7 +115,7 @@ contract Staking is ReentrancyGuard, Ownable {
                 maxStakingTokensPerAccount + 1,
             "Max tokens staked for account"
         );
-        // Loop to deposit tokens
+        // Loop for each token id
         for (uint256 i = 0; i < _tokenIds.length; ) {
             // Only allow tokens owned from sender
             require(
@@ -183,6 +210,9 @@ contract Staking is ReentrancyGuard, Ownable {
         }
     }
 
+    /*///////////////////////////////////////////////////////////////
+                            REWARD LOGIC
+    //////////////////////////////////////////////////////////////*/
     /// @notice Calculate the reward of BBone for a staked NFT
     function stakingReward(uint256 _tokenId) public view returns (uint256) {
         require(_tokenId != 0, "Invalid token id");
@@ -221,6 +251,16 @@ contract Staking is ReentrancyGuard, Ownable {
 
     /// @notice Maps address to staking count.
     mapping(address => uint256) public stakingCountForAddress;
+
+    /// @notice Check if a account has staked tokens
+    function isAccountStaking(address _account)
+        external
+        view
+        returns (bool staked)
+    {
+        uint256[] memory tokenIds = _stakedTokensOf(_account);
+        return tokenIds.length > 0;
+    }
 
     /// @notice Check if a token is staked
     function isStaked(uint256 _tokenId)

@@ -3,10 +3,13 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+
 const hre = require('hardhat');
 const fs = require('fs-extra');
 
 const { execSync } = require('child_process');
+
+const abiRouter = JSON.parse(fs.readFileSync('./abiTest/Router.json', { encoding: 'utf-8' }));
 
 async function main() {
   await hre.run('compile');
@@ -14,25 +17,69 @@ async function main() {
   const joeRouter = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9';
   // const joeRouter = '0x60aE616a2155Ee3d9A68541Ba4544862310933d4';
   const BBone = await hre.ethers.getContractFactory('BBone');
+  const Bobtail = await hre.ethers.getContractFactory('Bobtail');
+  const Matchs = await hre.ethers.getContractFactory('Matchs');
+  const Staking = await hre.ethers.getContractFactory('Staking');
+  const FlappyAVAX = await hre.ethers.getContractFactory('FlappyAVAX');
+
   const bbone = await BBone.deploy(joeRouter);
   await bbone.deployed();
-  const Bobtail = await hre.ethers.getContractFactory('Bobtail');
+
   const bobtail = await Bobtail.deploy(joeRouter, bbone.address);
   await bobtail.deployed();
-  const FlappyAVAX = await hre.ethers.getContractFactory('FlappyAVAX');
+
   const flappyAVAX = await FlappyAVAX.deploy(
-    joeRouter,
     bbone.address,
-    accounts[9].address,
-    await bbone.joePair(),
   );
   await flappyAVAX.deployed();
-  await bbone.allowMinter(flappyAVAX.address);
 
+  const matchs = await Matchs.deploy(
+    accounts[19].address,
+    bbone.address,
+    flappyAVAX.address,
+  );
+  await matchs.deployed();
+
+  const staking = await Staking.deploy(
+    bbone.address,
+    flappyAVAX.address,
+  );
+  await staking.deployed();
+
+  await flappyAVAX.setStakingManager(staking.address);
+  await matchs.setStakingManager(staking.address);
+  await bbone.setStakingManager(staking.address);
+
+  await staking.setMatchManager(matchs.address);
+  await bbone.setMatchManager(matchs.address);
+
+  await bbone.addBobtailContract(flappyAVAX.address, true);
+  await bbone.addBobtailContract(bobtail.address, true);
+
+  /*
+  only dev
+  */
+  const liqToken = hre.ethers.utils.parseEther('1');
+  await bbone.approve(joeRouter, liqToken);
+  const router = new hre.ethers.Contract(joeRouter, abiRouter, accounts[0]);
+  const res = await router.addLiquidityAVAX(
+    bbone.address,
+    liqToken,
+    '0',
+    '0',
+    accounts[0].address,
+    Math.floor(Date.now() / 1000) * 10,
+    {
+      value: hre.ethers.utils.parseEther('0.005'),
+    },
+  );
+  await res.wait();
   await fs.writeJSON('deployAddress.json', {
     FlappyAVAX: flappyAVAX.address,
     Bobtail: bobtail.address,
     BBone: bbone.address,
+    Staking: staking.address,
+    Matchs: matchs.address,
   }, {
     spaces: '\t',
   });
@@ -46,6 +93,8 @@ async function main() {
   await fs.copyFile('./artifacts/contracts/BBone.sol/BBone.json', './abi/BBone.json');
   await fs.copyFile('./artifacts/contracts/Bobtail.sol/Bobtail.json', './abi/Bobtail.json');
   await fs.copyFile('./artifacts/contracts/FlappyAVAX.sol/FlappyAVAX.json', './abi/FlappyAVAX.json');
+  await fs.copyFile('./artifacts/contracts/Staking.sol/Staking.json', './abi/Staking.json');
+  await fs.copyFile('./artifacts/contracts/Matchs.sol/Matchs.json', './abi/Matchs.json');
   execSync('typechain --target ethers-v5 --out-dir abi/types "./abi/**/*.json" --show-stack-traces', {
     cwd: './',
   });

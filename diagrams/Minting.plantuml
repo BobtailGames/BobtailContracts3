@@ -1,0 +1,28 @@
+@startuml Minting
+!theme materia
+
+skinparam sequenceArrowThickness 2
+skinparam roundcorner 10
+skinparam maxmessagesize 160
+skinparam classFontSize 15
+skinparam defaultFontName Open Sans Semibold
+
+
+participant "Minting(FlappyAVAX Contract)" as Minting
+hnote over Minting: 1 avax 
+
+participant "BBone Contract" as BBone
+participant "TraderJoe Contract" as TraderJoe
+
+activate Minting
+Minting -> BBone: Transfer 0.98 AVAX
+activate BBone
+BBone --> BBone: Mint BBone
+BBone -> TraderJoe: Add liquidity AVAX/BBone
+TraderJoe --> BBone: LP Locked in contract
+
+deactivate BBone
+
+Minting -> "Development": Transfer 0.02 AVAX
+deactivate Minting
+@enduml

@@ -50,9 +50,4 @@ interface IBobtailNFT is IERC721 {
         external
         view
         returns (NftEntityExtended[] memory);
-
-    function tokenInfo(uint256 _tokenId)
-        external
-        view
-        returns (NftEntity memory);
 }
