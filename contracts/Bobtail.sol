@@ -2,8 +2,6 @@
 pragma solidity 0.8.12;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IBBone.sol";
@@ -14,7 +12,7 @@ import "hardhat/console.sol";
 /// @title Bobtail token (Bobtail)
 /// @author 0xPandita
 /// @notice Governance and future gas token for subnet
-contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
+contract Bobtail is ERC20, Ownable {
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -110,7 +108,7 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
     event LpPairsUpdated(address pair, bool enabled);
 
     /// @notice Enable/disable LP pairs to take fee on buy and sell
-    function setLpPair(address _pair, bool _enabled) external onlyOwner {
+    function setLPPair(address _pair, bool _enabled) external onlyOwner {
         lpPairs[_pair] = _enabled;
         emit LpPairsUpdated(_pair, _enabled);
     }
@@ -280,31 +278,6 @@ contract Bobtail is ERC20, ERC20Permit, ERC20Votes, Ownable {
             address(bboneToken),
             block.timestamp
         );
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                FUNCTION OVERRIDES REQUIRED BY ERC20Votes
-    //////////////////////////////////////////////////////////////*/
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20, ERC20Votes) {
-        super._afterTokenTransfer(from, to, amount);
-    }
-
-    function _mint(address to, uint256 amount)
-        internal
-        override(ERC20, ERC20Votes)
-    {
-        super._mint(to, amount);
-    }
-
-    function _burn(address account, uint256 amount)
-        internal
-        override(ERC20, ERC20Votes)
-    {
-        super._burn(account, amount);
     }
 
     /*///////////////////////////////////////////////////////////////

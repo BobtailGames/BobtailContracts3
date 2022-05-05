@@ -15,15 +15,11 @@ import "./interfaces/IBBone.sol";
 /// @title Bobtail Match Manager 1.0 (MatchManager)
 /// @author 0xPandita
 /// @notice This contract controls the creation of matchs for the Bobtail.games NFT
-/// tokens and pays the reward based on the time staked, this contract only allow
-/// one ERC721 contract, this contract will be updated in the future for a version
+/// tokens and pays the reward based on the game result, this contract only allow
+/// one ERC721 contract, this contract will be disabled in the future for a version
 /// 2.0 currently in developmnent
 
 contract Matchs is ReentrancyGuard, Ownable {
-    modifier onlyEOA() {
-        require(msg.sender.code.length == 0, "Only EOA");
-        _;
-    }
     struct Player {
         bool joined;
         bool claimed;
@@ -51,13 +47,20 @@ contract Matchs is ReentrancyGuard, Ownable {
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
     //////////////////////////////////////////////////////////////*/
+    /// The BBone interface to pay match rewards
     IBBone public immutable bbone;
+    /// FlappyAVAX interface to check if a token is owned by account
     IBobtailNFT public immutable allowedNftContract;
 
+    /** @notice Calculates a rectangle's surface and perimeter.
+     * @param _mainSigner Width of the rectangle.
+     * @param _bbone Height of the rectangle.
+     * @param _flappyAvax Height of the rectangle.
+     */
     constructor(
         address _mainSigner,
         address _bbone,
-        address _contractAddress
+        address _flappyAvax
     ) {
         mainSigner = _mainSigner;
         //Default regions
@@ -65,7 +68,7 @@ contract Matchs is ReentrancyGuard, Ownable {
 
         bbone = IBBone(_bbone);
 
-        allowedNftContract = IBobtailNFT(_contractAddress);
+        allowedNftContract = IBobtailNFT(_flappyAvax);
 
         //Default reward portions
         portionRewardPerRank[0] = 2200; //22% #1
@@ -276,7 +279,6 @@ contract Matchs is ReentrancyGuard, Ownable {
     /// @notice Join a new match with a allowed NFT
     function joinMatch(uint256 _tokenId, string calldata region)
         external
-        onlyEOA
         nonReentrant
     {
         // Only if StakingManager is set
@@ -352,7 +354,7 @@ contract Matchs is ReentrancyGuard, Ownable {
         bytes32 r,
         bytes32 s,
         uint8 v
-    ) external onlyEOA nonReentrant {
+    ) external nonReentrant {
         //TODO time signature
         // _matchIds and _ranks should be greater than zero
         require(_matchIds.length > 0 && _ranks.length > 0, "Invalid request");

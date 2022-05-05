@@ -17,6 +17,7 @@ import "./interfaces/IBBone.sol";
 /// @notice Reward token for Bobtail.games, this token cannot be
 /// bought, only sold and is rewarded by staking or playing.
 
+//TODO remover saldo extra de bbone y avax
 contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
@@ -81,14 +82,14 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
                     LIQUIDITY CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Contracts that allowed to add liquidity
+    /// @notice Contracts allowed to call addLiquidity
     mapping(address => bool) private bobtailContracts;
 
     /// @notice LP pairs to disallow buys
     mapping(address => bool) private swapPairs;
 
     /// @notice Add contract allowed to add liquidity
-    function addBobtailContract(address _address, bool _status)
+    function setBobtailContract(address _address, bool _status)
         external
         onlyOwner
     {
@@ -116,7 +117,7 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
         external
         nonReentrant
     {
-        // Only allowed matchManager
+        // Only allowed and trusted Bobtail contracts
         require(bobtailContracts[msg.sender], "Caller is not bobtail contract");
         // The necessary avax balance must be sent before calling this
         require(address(this).balance >= _amountAvax, "Not enough balance");
