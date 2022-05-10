@@ -19,7 +19,7 @@ import "./interfaces/IBBone.sol";
 /// one ERC721 contract, this contract will be disabled in the future for a version
 /// 2.0 currently in developmnent
 
-contract Matchs is ReentrancyGuard, Ownable {
+contract MatchManager is ReentrancyGuard, Ownable {
     struct Player {
         bool joined;
         bool claimed;

@@ -53,12 +53,12 @@ export declare namespace IBobtailNFT {
   };
 }
 
-export interface StakingInterface extends utils.Interface {
-  contractName: "Staking";
+export interface StakingManagerInterface extends utils.Interface {
+  contractName: "StakingManager";
   functions: {
-    "allowedNftContract()": FunctionFragment;
     "bbone()": FunctionFragment;
-    "isAccountStaking(address)": FunctionFragment;
+    "flappyAvax()": FunctionFragment;
+    "isAddressStaking(address)": FunctionFragment;
     "isStaked(uint256)": FunctionFragment;
     "matchManager()": FunctionFragment;
     "maxStakingTokensPerAccount()": FunctionFragment;
@@ -75,16 +75,16 @@ export interface StakingInterface extends utils.Interface {
     "stakingCountForAddress(address)": FunctionFragment;
     "stakingReward(uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "withdraw(uint256[],bool)": FunctionFragment;
+    "withdrawOrClaim(uint256[],bool)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "allowedNftContract",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "bbone", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "isAccountStaking",
+    functionFragment: "flappyAvax",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isAddressStaking",
     values: [string]
   ): string;
   encodeFunctionData(
@@ -149,17 +149,14 @@ export interface StakingInterface extends utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "withdraw",
+    functionFragment: "withdrawOrClaim",
     values: [BigNumberish[], boolean]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "allowedNftContract",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "bbone", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "flappyAvax", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "isAccountStaking",
+    functionFragment: "isAddressStaking",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "isStaked", data: BytesLike): Result;
@@ -217,7 +214,10 @@ export interface StakingInterface extends utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawOrClaim",
+    data: BytesLike
+  ): Result;
 
   events: {
     "MatchManagerUpdated(address)": EventFragment;
@@ -266,13 +266,13 @@ export type RewardPerMinuteUpdatedEvent = TypedEvent<
 export type RewardPerMinuteUpdatedEventFilter =
   TypedEventFilter<RewardPerMinuteUpdatedEvent>;
 
-export interface Staking extends BaseContract {
-  contractName: "Staking";
+export interface StakingManager extends BaseContract {
+  contractName: "StakingManager";
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: StakingInterface;
+  interface: StakingManagerInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
@@ -294,12 +294,12 @@ export interface Staking extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    allowedNftContract(overrides?: CallOverrides): Promise<[string]>;
-
     bbone(overrides?: CallOverrides): Promise<[string]>;
 
-    isAccountStaking(
-      _account: string,
+    flappyAvax(overrides?: CallOverrides): Promise<[string]>;
+
+    isAddressStaking(
+      _address: string,
       overrides?: CallOverrides
     ): Promise<[boolean] & { staked: boolean }>;
 
@@ -374,19 +374,19 @@ export interface Staking extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    withdraw(
+    withdrawOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
 
-  allowedNftContract(overrides?: CallOverrides): Promise<string>;
-
   bbone(overrides?: CallOverrides): Promise<string>;
 
-  isAccountStaking(
-    _account: string,
+  flappyAvax(overrides?: CallOverrides): Promise<string>;
+
+  isAddressStaking(
+    _address: string,
     overrides?: CallOverrides
   ): Promise<boolean>;
 
@@ -461,19 +461,19 @@ export interface Staking extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  withdraw(
+  withdrawOrClaim(
     _tokenIds: BigNumberish[],
     _unstake: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    allowedNftContract(overrides?: CallOverrides): Promise<string>;
-
     bbone(overrides?: CallOverrides): Promise<string>;
 
-    isAccountStaking(
-      _account: string,
+    flappyAvax(overrides?: CallOverrides): Promise<string>;
+
+    isAddressStaking(
+      _address: string,
       overrides?: CallOverrides
     ): Promise<boolean>;
 
@@ -543,7 +543,7 @@ export interface Staking extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    withdraw(
+    withdrawOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: CallOverrides
@@ -581,12 +581,12 @@ export interface Staking extends BaseContract {
   };
 
   estimateGas: {
-    allowedNftContract(overrides?: CallOverrides): Promise<BigNumber>;
-
     bbone(overrides?: CallOverrides): Promise<BigNumber>;
 
-    isAccountStaking(
-      _account: string,
+    flappyAvax(overrides?: CallOverrides): Promise<BigNumber>;
+
+    isAddressStaking(
+      _address: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -657,7 +657,7 @@ export interface Staking extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    withdraw(
+    withdrawOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -665,14 +665,12 @@ export interface Staking extends BaseContract {
   };
 
   populateTransaction: {
-    allowedNftContract(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     bbone(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    isAccountStaking(
-      _account: string,
+    flappyAvax(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    isAddressStaking(
+      _address: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
@@ -745,7 +743,7 @@ export interface Staking extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    withdraw(
+    withdrawOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }

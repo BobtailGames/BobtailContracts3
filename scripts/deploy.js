@@ -18,8 +18,8 @@ async function main() {
   // const joeRouter = '0x60aE616a2155Ee3d9A68541Ba4544862310933d4';
   const BBone = await hre.ethers.getContractFactory('BBone');
   const Bobtail = await hre.ethers.getContractFactory('Bobtail');
-  const Matchs = await hre.ethers.getContractFactory('Matchs');
-  const Staking = await hre.ethers.getContractFactory('Staking');
+  const Matchs = await hre.ethers.getContractFactory('MatchManager');
+  const Staking = await hre.ethers.getContractFactory('StakingManager');
   const FlappyAVAX = await hre.ethers.getContractFactory('FlappyAVAX');
 
   const bbone = await BBone.deploy(joeRouter);
@@ -34,7 +34,7 @@ async function main() {
   await flappyAVAX.deployed();
 
   const matchs = await Matchs.deploy(
-    accounts[19].address,
+    accounts[9].address,
     bbone.address,
     flappyAVAX.address,
   );
@@ -53,8 +53,8 @@ async function main() {
   await staking.setMatchManager(matchs.address);
   await bbone.setMatchManager(matchs.address);
 
-  await bbone.addBobtailContract(flappyAVAX.address, true);
-  await bbone.addBobtailContract(bobtail.address, true);
+  await bbone.setBobtailContract(flappyAVAX.address, true);
+  await bbone.setBobtailContract(bobtail.address, true);
 
   /*
   only dev
@@ -93,8 +93,8 @@ async function main() {
   await fs.copyFile('./artifacts/contracts/BBone.sol/BBone.json', './abi/BBone.json');
   await fs.copyFile('./artifacts/contracts/Bobtail.sol/Bobtail.json', './abi/Bobtail.json');
   await fs.copyFile('./artifacts/contracts/FlappyAVAX.sol/FlappyAVAX.json', './abi/FlappyAVAX.json');
-  await fs.copyFile('./artifacts/contracts/Staking.sol/Staking.json', './abi/Staking.json');
-  await fs.copyFile('./artifacts/contracts/Matchs.sol/Matchs.json', './abi/Matchs.json');
+  await fs.copyFile('./artifacts/contracts/StakingManager.sol/StakingManager.json', './abi/StakingManager.json');
+  await fs.copyFile('./artifacts/contracts/MatchManager.sol/MatchManager.json', './abi/MatchManager.json');
   execSync('typechain --target ethers-v5 --out-dir abi/types "./abi/**/*.json" --show-stack-traces', {
     cwd: './',
   });

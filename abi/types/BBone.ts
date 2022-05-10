@@ -20,7 +20,6 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface BBoneInterface extends utils.Interface {
   contractName: "BBone";
   functions: {
-    "addBobtailContract(address,bool)": FunctionFragment;
     "addLiquidity(uint256,uint8)": FunctionFragment;
     "addSwapPair(address,bool)": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
@@ -36,6 +35,7 @@ export interface BBoneInterface extends utils.Interface {
     "payMatchReward(address,uint256)": FunctionFragment;
     "payStakingReward(address,uint256)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "setBobtailContract(address,bool)": FunctionFragment;
     "setMatchManager(address)": FunctionFragment;
     "setStakingManager(address)": FunctionFragment;
     "stakingManager()": FunctionFragment;
@@ -46,10 +46,6 @@ export interface BBoneInterface extends utils.Interface {
     "transferOwnership(address)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "addBobtailContract",
-    values: [string, boolean]
-  ): string;
   encodeFunctionData(
     functionFragment: "addLiquidity",
     values: [BigNumberish, BigNumberish]
@@ -96,6 +92,10 @@ export interface BBoneInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "setBobtailContract",
+    values: [string, boolean]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setMatchManager",
     values: [string]
   ): string;
@@ -125,10 +125,6 @@ export interface BBoneInterface extends utils.Interface {
     values: [string]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "addBobtailContract",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "addLiquidity",
     data: BytesLike
@@ -166,6 +162,10 @@ export interface BBoneInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setBobtailContract",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -290,12 +290,6 @@ export interface BBone extends BaseContract {
   removeListener: OnEvent<this>;
 
   functions: {
-    addBobtailContract(
-      _address: string,
-      _status: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
@@ -360,6 +354,12 @@ export interface BBone extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setBobtailContract(
+      _address: string,
+      _status: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setMatchManager(
       _matchManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -394,12 +394,6 @@ export interface BBone extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
-
-  addBobtailContract(
-    _address: string,
-    _status: boolean,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
 
   addLiquidity(
     _amountAvax: BigNumberish,
@@ -465,6 +459,12 @@ export interface BBone extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setBobtailContract(
+    _address: string,
+    _status: boolean,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setMatchManager(
     _matchManager: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -500,12 +500,6 @@ export interface BBone extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    addBobtailContract(
-      _address: string,
-      _status: boolean,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
@@ -567,6 +561,12 @@ export interface BBone extends BaseContract {
     ): Promise<void>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    setBobtailContract(
+      _address: string,
+      _status: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     setMatchManager(
       _matchManager: string,
@@ -662,12 +662,6 @@ export interface BBone extends BaseContract {
   };
 
   estimateGas: {
-    addBobtailContract(
-      _address: string,
-      _status: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
@@ -732,6 +726,12 @@ export interface BBone extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setBobtailContract(
+      _address: string,
+      _status: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setMatchManager(
       _matchManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -768,12 +768,6 @@ export interface BBone extends BaseContract {
   };
 
   populateTransaction: {
-    addBobtailContract(
-      _address: string,
-      _status: boolean,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
@@ -838,6 +832,12 @@ export interface BBone extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     renounceOwnership(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setBobtailContract(
+      _address: string,
+      _status: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -28,7 +28,6 @@ contract Bobtail is ERC20, Ownable {
 
     constructor(address _router, address _bbone)
         ERC20("Bobtail.games", "BOBTAIL")
-        ERC20Permit("Bobtail.games")
     {
         _mint(msg.sender, 1_000_000_000 * 10**decimals());
         IJoeRouter02 _joeRouter = IJoeRouter02(_router);

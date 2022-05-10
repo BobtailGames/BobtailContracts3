@@ -76,6 +76,7 @@ describe('BobTestSuite', () => {
         ethers.utils.parseUnits((7698 * 73).toString()),
         ethers.utils.parseUnits('300000000'),
       ));
+      return;
       console.log(ethers.utils.formatEther(await bobtail.balanceOf(accounts[0].address)));
       console.log(ethers.utils.formatEther(await bobtail.balanceOf(accounts[1].address)));
       const account = accounts[1].address;
@@ -93,7 +94,6 @@ describe('BobTestSuite', () => {
       await sleep(1000 * 10);
     });
 
-    return;
     it('Should deploy FlappyAVAX', async () => {
       const FlappyAVAX = await ethers.getContractFactory('FlappyAVAX');
       flappyAVAX = await FlappyAVAX.deploy(

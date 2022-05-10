@@ -17,8 +17,8 @@ import { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
-export interface MatchsInterface extends utils.Interface {
-  contractName: "Matchs";
+export interface MatchManagerInterface extends utils.Interface {
+  contractName: "MatchManager";
   functions: {
     "activeMatchsCount(string)": FunctionFragment;
     "allowedNftContract()": FunctionFragment;
@@ -346,13 +346,13 @@ export type StakingManagerUpdatedEvent = TypedEvent<
 export type StakingManagerUpdatedEventFilter =
   TypedEventFilter<StakingManagerUpdatedEvent>;
 
-export interface Matchs extends BaseContract {
-  contractName: "Matchs";
+export interface MatchManager extends BaseContract {
+  contractName: "MatchManager";
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
 
-  interface: MatchsInterface;
+  interface: MatchManagerInterface;
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
