@@ -4,21 +4,22 @@ pragma solidity ^0.8.12;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./libraries/ReentrancyGuard.sol";
-
 import "./interfaces/IJoeRouter02.sol";
 import "./interfaces/IJoeFactory.sol";
 import "./interfaces/IBBone.sol";
 
-// solhint-disable mark-callable-contracts, indent
-
 /// @title BBone token (BBone)
 /// @author 0xPandita
 /// @notice Reward token for Bobtail.games, this token cannot be
-/// bought, only sold and is rewarded by staking or playing.
+/// bought, only sold and is rewarded by staking or playing on
+/// the ecosystem.
+
+// This is disabled because all the time function related have a minimum
+// 60 seconds window to prevent exploits
+// solhint-disable not-rely-on-time
 
 //TODO remover saldo extra de bbone y avax
-contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
+contract BBone is ERC20, Ownable, IBBone {
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -29,32 +30,37 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
     /// @notice The pair BBone-WAVAX created at deploy
     address public immutable joePair;
 
-    constructor(address _router) ERC20("Bobtail Bone", "BBone") {
-        _mint(msg.sender, 1_000_000 * 10**decimals());
+    /// @param _joeRouter The TraderJoe router contract address
+    constructor(address _joeRouter) ERC20("Bobtail Bone", "BBone") {
+        /// 1 $BBone is minted to set price on TraderJoe
+        _mint(msg.sender, 1 ether);
 
-        IJoeRouter02 _joeRouter = IJoeRouter02(_router);
+        /// TraderJoe router to add liquidity
+        IJoeRouter02 joeRouterTmp = IJoeRouter02(_joeRouter);
 
-        // Create a TraderJoe pair
-        joePair = IJoeFactory(_joeRouter.factory()).createPair(
+        // Create a TraderJoe pair BBone-WAVAX
+        joePair = IJoeFactory(joeRouterTmp.factory()).createPair(
             address(this),
-            _joeRouter.WAVAX()
+            joeRouterTmp.WAVAX()
         );
         // Add TraderJoe pair to disallow buying
         swapPairs[joePair] = true;
+        // TODO emit event
         // set the rest of the contract variables
-        joeRouter = _joeRouter;
+        joeRouter = joeRouterTmp;
     }
 
     /*///////////////////////////////////////////////////////////////
                         STAKING MANAGER CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice How much a match should last
+    /// @notice The StakingManager allowed to mint staking rewards
     address public stakingManager;
 
-    event StakingManagerUpdated(address matchDuration);
+    event StakingManagerUpdated(address _stakingManager);
 
     /// @notice Set staking manager
+    /// @param _stakingManager The StakingManager contract address
     function setStakingManager(address _stakingManager) external onlyOwner {
         // Update staking manager
         stakingManager = _stakingManager;
@@ -65,13 +71,13 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
                         MATCH MANAGER CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The Bobtail Match Manager to check if a token is in match
-    /// and prevent unstaking
+    /// @notice The MatchManager allowed to mint playing rewards
     address public matchManager;
 
-    event MatchManagerUpdated(address matchDuration);
+    event MatchManagerUpdated(address _matchManager);
 
     /// @notice Set match manager
+    /// @param _matchManager The match manager contract address
     function setMatchManager(address _matchManager) external onlyOwner {
         // Update match manager
         matchManager = _matchManager;
@@ -79,26 +85,42 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
     }
 
     /*///////////////////////////////////////////////////////////////
-                    LIQUIDITY CONFIGURATION
+                    ADD LIQUIDITY CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Contracts allowed to call addLiquidity
     mapping(address => bool) private bobtailContracts;
 
-    /// @notice LP pairs to disallow buys
-    mapping(address => bool) private swapPairs;
+    event BobtailContractUpdated(address _address, bool _status);
 
-    /// @notice Add contract allowed to add liquidity
+    /// @notice Set contract allowed to add liquidity
+    /// @param _address The contract address to set status
+    /// @param _status true=allowed
     function setBobtailContract(address _address, bool _status)
         external
         onlyOwner
     {
+        // Update bobtail contract status
         bobtailContracts[_address] = _status;
+        emit BobtailContractUpdated(_address, _status);
     }
 
-    /// @notice Add LP pair to swapPairs to prevent buying
-    function addSwapPair(address _address, bool _status) external onlyOwner {
+    /*///////////////////////////////////////////////////////////////
+                    LP PAIRS CONFIGURATION
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice LP pairs to disallow buys
+    mapping(address => bool) private swapPairs;
+
+    event SwapPairUpdated(address _address, bool _status);
+
+    /// @notice Set LP pair to swapPairs to prevent buying
+    /// @param _address The contract address to set status
+    /// @param _status true=allowed
+    function setSwapPair(address _address, bool _status) external onlyOwner {
+        // Update LP pair status
         swapPairs[_address] = _status;
+        emit SwapPairUpdated(_address, _status);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -113,9 +135,11 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
     );
 
     /// @notice This is called by Bobtail token and NFT contracts allowed to add liquidity.
+    /// @param _amountAvax amount of AVAX to be added
+    /// @param _liquidityType enum with different types to identify the source
+    /// SWAP, MINTING, OTHER
     function addLiquidity(uint256 _amountAvax, LiquidityType _liquidityType)
         external
-        nonReentrant
     {
         // Only allowed and trusted Bobtail contracts
         require(bobtailContracts[msg.sender], "Caller is not bobtail contract");
@@ -150,28 +174,26 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
                     STAKING AND MATCH REWARD LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    //TODO
-    /// @notice Pay staking rewards
-    function payStakingReward(address _to, uint256 _amount)
-        external
-        nonReentrant
-    {
+    event PayStakingReward(address _to, uint256 _amount);
+    event PayMatchReward(address _to, uint256 _amount);
+
+    /// @notice Pay staking rewards, can only be called by StakingManager
+    function payStakingReward(address _to, uint256 _amount) external {
         // Only allow stakingManager
         require(stakingManager == msg.sender, "Caller is not stakingManager");
         require(_amount > 0, "Incorrect amount");
         // Mint the amount required
         _mint(_to, _amount);
+        emit PayStakingReward(_to, _amount);
     }
 
-    /// @notice Pay rewards for match
-    function payMatchReward(address _to, uint256 _amount)
-        external
-        nonReentrant
-    {
+    /// @notice Pay rewards for match, can only be called from MatchManager
+    function payMatchReward(address _to, uint256 _amount) external {
         // Only allow matchManager
         require(matchManager == msg.sender, "Caller is not matchManager");
         // Mint the amount required
         _mint(_to, _amount);
+        emit PayMatchReward(_to, _amount);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -191,6 +213,7 @@ contract BBone is ERC20, Ownable, ReentrancyGuard, IBBone {
                           RECIEVE AVAX LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Required for the contract to receive unwrapped AVAX.
+    /// @dev Required for the contract to receive AVAX.
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 }

@@ -8,10 +8,16 @@ import "./interfaces/IBBone.sol";
 import "./interfaces/IJoeRouter02.sol";
 import "./interfaces/IJoeFactory.sol";
 import "hardhat/console.sol";
+import "@prb/math/contracts/PRBMathUD60x18.sol";
 
 /// @title Bobtail token (Bobtail)
 /// @author 0xPandita
 /// @notice Governance and future gas token for subnet
+
+// This is disabled because all the time function related have a minimum
+// 60 seconds window to prevent exploits
+// solhint-disable not-rely-on-time
+
 contract Bobtail is ERC20, Ownable {
     /*///////////////////////////////////////////////////////////////
                                 IMMUTABLES
@@ -29,7 +35,7 @@ contract Bobtail is ERC20, Ownable {
     constructor(address _router, address _bbone)
         ERC20("Bobtail.games", "BOBTAIL")
     {
-        _mint(msg.sender, 1_000_000_000 * 10**decimals());
+        _mint(msg.sender, 1_000_000_000 ether);
         IJoeRouter02 _joeRouter = IJoeRouter02(_router);
 
         // Create a uniswap pair for this new token
@@ -48,13 +54,14 @@ contract Bobtail is ERC20, Ownable {
                                 FEE CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Fee percentage taken on buy and sell
+    /// @notice Fee percentage taken on buy and sell, this is added to $BBone liquidity
     uint32 public feePercentage = 2; // 2%
 
     event FeePercentageUpdated(uint32 feePercentage);
 
-    /// @notice Udate fee percentage only allow min=1% | max=9%
+    /// @notice Udate fee percentage only allow min=1% and max=9%
     /// fee above 9% doesn't make sense.
+    /// @param _feePercentage new fee percentage between 1 and 9
     function setFee(uint32 _feePercentage) external onlyOwner {
         require(
             _feePercentage > 0 && _feePercentage < 10,
@@ -74,10 +81,12 @@ contract Bobtail is ERC20, Ownable {
     event MinTokensBeforeSwapUpdated(uint128 minTokensBeforeSwap);
 
     /// @notice Update min tokens to start a swap Bobtail->AVAX and add liquidity to bbone
+    /// @param _minTokensBeforeSwap New min tokens to start a swap
     function setMinTokensBeforeSwap(uint32 _minTokensBeforeSwap)
         external
         onlyOwner
     {
+        // Update min tokens
         minTokensBeforeSwap = _minTokensBeforeSwap;
         emit MinTokensBeforeSwapUpdated(_minTokensBeforeSwap);
     }
@@ -86,12 +95,15 @@ contract Bobtail is ERC20, Ownable {
                             SWAP AND LIQUIFY CONFIGURATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Take fee on swap and add liquidity to BBone
+    /// @notice Define whether the contract will use collected tax to provide
+    /// liquidity onto the swap
     bool public swapAndLiquifyEnabled;
 
     event SwapAndLiquifyEnabledUpdated(bool enabled);
 
-    /// @notice Enable/disable take fee on swap and add liquidity to BBone
+    /// @notice Enable or disable the feature to sent collected tokens from
+    /// transaction fee to swap to provide liquidity
+    /// @param _enabled enable or disable the feature
     function setSwapAndLiquifyEnabled(bool _enabled) external onlyOwner {
         swapAndLiquifyEnabled = _enabled;
         emit SwapAndLiquifyEnabledUpdated(_enabled);
@@ -107,24 +119,23 @@ contract Bobtail is ERC20, Ownable {
     event LpPairsUpdated(address pair, bool enabled);
 
     /// @notice Enable/disable LP pairs to take fee on buy and sell
+    /// @param _pair The address of the LP pair
+    /// @param _enabled If true it will take fee on the pair
     function setLPPair(address _pair, bool _enabled) external onlyOwner {
         lpPairs[_pair] = _enabled;
         emit LpPairsUpdated(_pair, _enabled);
     }
 
     /*///////////////////////////////////////////////////////////////
-                        LEVEL/EXP STORAGE
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice LP pairs to take fee on buy and sell
-    mapping(address => bool) private levelAndExp;
-
-    /*///////////////////////////////////////////////////////////////
                            LOCK SWAP LOGIC
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Used by swapAndLiquify() method to signal whether we are already providing liquidity
+    /// so that we don't fall into an infinite loop in that method
     bool private inSwapAndLiquify;
 
+    /// @notice Modifier for preventing the contract from checking whether to provide liquidity
+    /// when we are providing liquidity, this is used to prevent an infinite loop
     modifier lockTheSwap() {
         inSwapAndLiquify = true;
         _;
@@ -132,14 +143,72 @@ contract Bobtail is ERC20, Ownable {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        TRANSFER AND TAKE FEE LOGIC
+                        LEVEL EXP STORAGE
     //////////////////////////////////////////////////////////////*/
 
-    event SwapAndLiquify(
-        uint256 tokensSwapped,
-        uint256 ethReceived,
-        uint256 tokensIntoLiqudity
-    );
+    ///@dev instead of keeping time share balance, we could simply mint time share token
+    ///but this would make every transfer consume a little more gas, and would be subjectively less clean
+    struct ExpLevelData {
+        uint256 lastTransferTimestamp;
+        uint256 aditionalExp;
+    }
+
+    mapping(address => bool) public expAndLvlExcluded;
+    mapping(address => ExpLevelData) public expAndLvl;
+
+    event UpdateLevelExpTimestampFor(address indexed owner, uint256 timestamp);
+
+    ///@notice Update last transfer timestamp for address
+    ///@param _address Address to update date
+    function updateLevelExpTimestampFor(address _address) internal {
+        /// Don't allow from 0 address and excluded addresses
+        if (_address != address(0) && !expAndLvlExcluded[_address]) {
+            /// Store block timestamp
+            expAndLvl[_address].lastTransferTimestamp = block.timestamp;
+            emit UpdateLevelExpTimestampFor(_address, block.timestamp);
+        }
+    }
+
+    /// @notice Get level and experience data for address
+    /// @param _address The address to get data
+    function levelExpDataFor(address _address)
+        public
+        view
+        returns (
+            uint256 experience,
+            uint256 level,
+            uint256 holdPercent,
+            uint256 holdingDuration
+        )
+    {
+        /// get current balance on memory
+        uint256 balance = balanceOf(_address);
+        /// get experience and level data for the address
+        ExpLevelData memory expLvlData = expAndLvl[_address];
+
+        /// If the balance is 0 or last transfer timestamp is 0 or
+        /// the address is excluded we return 0
+        if (
+            balance == 0 ||
+            expLvlData.lastTransferTimestamp == 0 ||
+            expAndLvlExcluded[_address]
+        ) {
+            return (0, 0, 0, 0);
+        }
+        /// Get the holding duration = total seconds holding / 10 seconds
+        holdingDuration = ((block.timestamp -
+            expLvlData.lastTransferTimestamp) / 10 seconds);
+        /// Get the holding percent of the account
+        holdPercent = ((balance * 10e18) / totalSupply()) / 10e10;
+        /// Sum hold percent and holding duration
+        experience = holdPercent + holdingDuration;
+        /// Level = 15 * √experience
+        level = (15 * PRBMathUD60x18.sqrt(experience)) / 10e10;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        TRANSFER AND TAKE FEE LOGIC
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice Override ERC20 _transfer to take fee
     function _transfer(
@@ -147,134 +216,77 @@ contract Bobtail is ERC20, Ownable {
         address _to,
         uint256 _amount
     ) internal override {
-        // Get balance of Bobtail in contract
-        uint256 contractTokenBalance = balanceOf(address(this));
-        // Check if contract balance is over the min number of tokens that
-        // we need to initiate a swap + liquidity lock.
-        bool overMinTokenBalance = contractTokenBalance >= minTokensBeforeSwap;
-        // Also, don't get caught in a circular liquidity event.
-        // Also, don't swap & liquify if sender is traderjoe pair and is disabled.
+        /// Get the amount of token collected from transaction fee and is now owned
+        /// by this contract
+        uint256 contractBobtailBalance = balanceOf(address(this));
+
+        /// Check if contractBobtailBalance exceeds the minimum required to provide
+        /// liquidity to swap
+        bool overMinTokenBalance = contractBobtailBalance >=
+            minTokensBeforeSwap;
+        /// Initiate to provide liquidity if,
+        /// 1. contractBobtailBalance exceeds the minimum required to provide liquidity to swap
+        /// 2. We are not already providing liquidity as indicated by the inSwapAndLiquify
+        /// (i.e. it should be false)
+        /// 3. Sender is not a LP pair otherwise it may affect the swap itself
+        /// 4. Contract is set to provide liquidity via the swapAndLiquifyEnabled flag
         if (
             overMinTokenBalance &&
             !inSwapAndLiquify &&
             !lpPairs[msg.sender] &&
             swapAndLiquifyEnabled
         ) {
-            _swapAndLiquify(contractTokenBalance);
+            /// Add liquidity to swap
+            _swapAndLiquify(contractBobtailBalance);
         }
 
-        // take fee if is buying/selling and if is enabled swapAndLiquifyEnabled
-        // and the lock swap is not active
+        /// Take fee if is a LP pair and if is enabled swapAndLiquifyEnabled
+        /// and the lock swap is not active
         if (lpPairs[msg.sender] && swapAndLiquifyEnabled && !inSwapAndLiquify) {
-            // calculate the number of Bobtail to take as a fee
-            uint256 tokensToLock = (_amount * feePercentage) / (10**2);
-            // take the fee and send those tokens to this contract address
-            // and then send the remainder of tokens to original recipient
-            uint256 tokensToTransfer = _amount - tokensToLock;
-            super._transfer(_from, address(this), tokensToLock);
-            super._transfer(_from, _to, tokensToTransfer);
+            /// calculate the number of Bobtail to take as a fee
+            uint256 bobtailToLock = (_amount * feePercentage) / (10**2);
+            /// take the fee and send those tokens to this contract address
+            /// and then send the remainder of tokens to original recipient
+            uint256 bobtailToTransfer = _amount - bobtailToLock;
+            super._transfer(_from, address(this), bobtailToLock);
+            super._transfer(_from, _to, bobtailToTransfer);
         } else {
             // Don't take fee
             super._transfer(_from, _to, _amount);
         }
-
-        updateTimeShare(_from);
-        updateTimeShare(_to);
-    }
-
-    ///@dev instead of keeping time share balance, we could simply mint time share token
-    ///but this would make every transfer consume a little more gas, and would be subjectively less clean
-    struct TimeShare {
-        uint256 lastBlockTimestamp;
-        uint256 lastBalance;
-    }
-
-    mapping(address => TimeShare) public timeShares;
-
-    //no need to log block number explicitly
-    event UpdateTimeShare(address indexed owner, uint256 balance);
-
-    ///@notice update time share balance available to _address at current block
-    function updateTimeShare(address _address) internal {
-        TimeShare storage timeShare = timeShares[_address];
-
-        if (timeShare.lastBlockTimestamp != 0) {
-            timeShare.lastBalance = timeShareBalanceOf(_address);
-        }
-
-        timeShare.lastBlockTimestamp = block.timestamp;
-
-        emit UpdateTimeShare(_address, timeShare.lastBalance);
-    }
-
-    /**
-      @notice get time share balance available to _address at current block
-      @dev formula to calculate the amount of TST the address is entitled at block:
-      x = last_updated_balance + holding_duration/blocks_in_year * days_in_year * percentage_of_tokens_owned
-      where 
-      holding_duration = block.number - last_updated_block_number
-      percentage_of_tokens_owned = balance / total_supply 
-      @return holdingDuration share balance
-    */
-    function timeShareBalanceOf(address _address)
-        public
-        view
-        returns (uint256 holdingDuration)
-    {
-        TimeShare memory timeShare = timeShares[_address];
-
-        holdingDuration = block.timestamp - timeShare.lastBlockTimestamp;
-        uint256 percentageOfTokensOwned = totalSupply() / balanceOf(_address);
-
-        uint256 tmp = holdingDuration * balanceOf(_address) * 365 * 10e17;
-        /*
-        
-        timeShare.lastBalance.add(
-            block
-                .number
-                .sub(timeShare.lastBlockNumber)
-                .mul(balances[_address])
-                .mul(daysInYear)
-                .mul(10e17)
-                .div(blocksInYear.mul(totalSupply_))
-        );
-        */
-        // return tmp / totalSupply();
+        // Update timestamp of last transfer
+        updateLevelExpTimestampFor(_from);
+        updateLevelExpTimestampFor(_to);
     }
 
     function _swapAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
-        // split the contract balance into halves
-        // uint256 half = contractTokenBalance / 2;
-
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
-        // has been manually sent to the contract
-        uint256 initialBalance = address(bboneToken).balance;
-
-        // swap tokens for ETH
-        swapTokensForEth(contractTokenBalance);
-
-        // how much AVAX and BBone did we just swap into?
-        uint256 newBalanceAvax = address(bboneToken).balance - initialBalance;
+        /// Capture the BBone contract current AVAX balance.
+        /// This is so that we can capture exactly the amount of AVAX that the
+        /// swap creates, and not make the liquidity event include any AVAX that
+        /// has been manually sent to the contract
+        uint256 initialBboneContractBalance = address(bboneToken).balance;
+        /// swap BOBTAIL for AVAX
+        _swapBobtailForAvax(contractTokenBalance);
+        /// how much AVAX did we just swap into?
+        uint256 newBalanceAvax = address(bboneToken).balance -
+            initialBboneContractBalance;
+        /// Call addLiquidity from the BBONE contract
         bboneToken.addLiquidity(newBalanceAvax, IBBone.LiquidityType.SWAP);
-
-        //TODO  emit SwapAndLiquify(half, newBalance, otherHalf);
     }
 
-    function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
+    function _swapBobtailForAvax(uint256 _bobtailAmount) private {
+        // Generate the TraderJoe pair path of Bobtail -> WAVAX
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = joeRouter.WAVAX();
-
-        _approve(address(this), address(joeRouter), tokenAmount);
-        // make the swap
+        /// Approve the amount of bobtail to swap
+        _approve(address(this), address(joeRouter), _bobtailAmount);
+        // Make the swap
         joeRouter.swapExactTokensForAVAXSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
+            _bobtailAmount,
+            0, // accept any amount of AVAX
             path,
-            address(bboneToken),
+            address(bboneToken), // TODO Receiver of AVAX
             block.timestamp
         );
     }
@@ -283,6 +295,7 @@ contract Bobtail is ERC20, Ownable {
                           RECIEVE AVAX LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Required for the contract to receive unwrapped AVAX.
+    /// @dev Required for the contract to receive AVAX.
+    // solhint-disable-next-line no-empty-blocks
     receive() external payable {}
 }

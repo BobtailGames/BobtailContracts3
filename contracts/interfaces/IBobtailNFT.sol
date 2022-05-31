@@ -13,18 +13,11 @@ interface IBobtailNFT is IERC721 {
         uint256 timestampMint;
         // uint256 timestampStake;
         uint256 block;
-    }
-
-    struct NftEntityExtended {
-        uint8 lvl;
-        uint8 exp;
         uint8 revealed;
-        uint256 skin;
-        uint256 face;
-        uint256 rarity;
-        uint256 id;
-        uint256 timestampMint;
-        // uint256 timestampStake;
+        uint8 staked;
+        uint8 skin;
+        uint8 face;
+        uint8 rarity;
         uint256 pendingReward;
     }
 
@@ -49,5 +42,5 @@ interface IBobtailNFT is IERC721 {
     function getTokensInfo(uint256[] memory _tokenIds)
         external
         view
-        returns (NftEntityExtended[] memory);
+        returns (NftEntity[] memory);
 }

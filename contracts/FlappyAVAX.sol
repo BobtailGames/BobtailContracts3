@@ -21,8 +21,8 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
                                  CONSTANTS
     //////////////////////////////////////////////////////////////*/
     uint8 public constant MAX_LEVELXP = 100;
-    uint256 public constant MAX_SUPPLY = 10000;
-    uint256 public constant MAX_MINTSPERTX = 30;
+    uint256 public constant MAX_SUPPLY = 1008;
+    uint256 public constant MAX_MINTSPERTX = 1008;
     uint256 public constant MINT_PRICE_AVAX = 1 ether; // 1 AVAX
     uint256 public constant REVEAL_TIME = 90 seconds;
     uint256 public constant ONE_EXP_PER_TIME = 864 seconds;
@@ -88,7 +88,13 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
                 lvl: 1, // default level
                 exp: 1, // default exp
                 block: block.number, // stored for reveal purposes
-                timestampMint: block.timestamp // stored for reveal purposes
+                timestampMint: block.timestamp, // stored for reveal purposes
+                revealed: 0,
+                staked: 0,
+                skin: 0,
+                face: 0,
+                rarity: 0,
+                pendingReward: 0
             });
             // mint to address
             _safeMint(_for, tokenId);
@@ -104,31 +110,77 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         bbone.addLiquidity(msg.value, IBBone.LiquidityType.MINTING);
     }
 
-    /// @notice The tokens are revealed after 90 seconds of minting to make it hard
-    ///         and expensive trying to trick the pseudo random number to get a better NFT
-    function isRevealed(uint256 _tokenId) public view returns (bool) {
-        return (block.timestamp - nfts[_tokenId].timestampMint) >= REVEAL_TIME;
+    event TokenRevealed(
+        uint256 tokenId,
+        uint256 skin,
+        uint256 face,
+        uint256 rarity
+    );
+
+    function doRevealFor(uint256[] memory _tokenIds) external {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            if (
+                block.timestamp > nfts[_tokenIds[i]].timestampMint &&
+                (block.timestamp - nfts[_tokenIds[i]].timestampMint) >
+                REVEAL_TIME
+            ) {
+                (uint8 rarity, uint8 skin, uint8 face) = getRevealInfo(
+                    _tokenIds[i]
+                );
+                nftsRevealed[skin][face] = true;
+                nfts[_tokenIds[i]].skin = skin;
+                nfts[_tokenIds[i]].face = face;
+                nfts[_tokenIds[i]].rarity = rarity;
+                nfts[_tokenIds[i]].revealed = 1;
+                emit TokenRevealed(_tokenIds[i], skin, face, rarity);
+            }
+        }
     }
+
+    function isRevealed(uint256 _tokenId) external view returns (bool) {
+        return nfts[_tokenId].revealed == 1;
+    }
+
+    mapping(uint8 => mapping(uint8 => bool)) nftsRevealed;
 
     function getRevealInfo(uint256 _tokenId)
         private
         view
         returns (
-            uint256 rarity,
-            uint256 skin,
-            uint256 face
+            uint8 rarity,
+            uint8 skin,
+            uint8 face
         )
     {
         uint256[] memory randomnessExpanded = Randomness.generate(
             nfts[_tokenId].block,
             _tokenId,
-            3
+            62
         );
-        return (
-            (randomnessExpanded[2] % 5) + 1,
-            (randomnessExpanded[0] % 42) + 1,
-            (randomnessExpanded[1] % 24) + 1
-        );
+        rarity = uint8((randomnessExpanded[0] % 5) + 1);
+        for (uint256 i = 0; i < 60; i++) {
+            uint8 skinTmp = uint8((randomnessExpanded[1 + i] % 42) + 1);
+            for (uint256 o = 0; o < 24; o++) {
+                uint8 faceTmp = uint8((randomnessExpanded[2 + o] % 24) + 1);
+                if (!nftsRevealed[skinTmp][faceTmp]) {
+                    return (rarity, skinTmp, faceTmp);
+                } else {
+                    skinTmp += 1;
+                    if (skinTmp < 43) {
+                        if (!nftsRevealed[skinTmp][faceTmp]) {
+                            return (rarity, skinTmp, faceTmp);
+                        }
+                    }
+                    faceTmp += 1;
+                    if (faceTmp < 25) {
+                        if (!nftsRevealed[skinTmp][faceTmp]) {
+                            return (rarity, skinTmp, faceTmp);
+                        }
+                    }
+                }
+            }
+        }
+        require(skin != 0 && face != 0, "No random data generated");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -152,40 +204,12 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     function tokenInfoExtended(uint256 _tokenId)
         public
         view
-        returns (NftEntityExtended memory)
+        returns (NftEntity memory)
     {
-        // Get current level and exp
-        (uint8 level, uint8 experience) = getLevelAndExp(_tokenId);
-
-        // Instantiate the result entity in memory with default and stored data
-        NftEntityExtended memory token = NftEntityExtended({
-            id: _tokenId, // Id of the token
-            lvl: level, // Current stored level
-            exp: experience, // Current stored exp
-            skin: 0, // Default skin
-            face: 0, // Default face
-            rarity: 0, // Default rarity
-            timestampMint: nfts[_tokenId].timestampMint, // Minting timestamp
-            revealed: 0, // Is revealed
-            pendingReward: 0 // Default pending reward = 0
-        });
+        NftEntity memory token = nfts[_tokenId];
         // If token is revealed get reveal info
-        if (isRevealed(_tokenId)) {
-            // Get the random rarity, skin, and face
-            (uint256 rarity, uint256 skin, uint256 face) = getRevealInfo(
-                _tokenId
-            );
-            // Set is revealed
-            token.revealed = 1;
-            // Skin id
-            token.skin = skin;
-            // Face id
-            token.face = face;
-            // Rarity
-            token.rarity = rarity;
-            // Check if is staked
-            (bool staked, ) = stakingManager.isStaked(_tokenId);
-            if (staked) {
+        if (token.revealed == 1) {
+            if (token.staked == 1) {
                 // If is staked get pending reward
                 token.pendingReward = stakingManager.stakingReward(_tokenId);
             }
@@ -208,7 +232,7 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     function tokensWithInfoOf(address _account)
         external
         view
-        returns (NftEntityExtended[] memory)
+        returns (NftEntity[] memory)
     {
         uint256[] memory tokenIds = _findTokensOf(_account);
         return getTokensInfo(tokenIds);
@@ -282,11 +306,9 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     function getTokensInfo(uint256[] memory _tokenIds)
         public
         view
-        returns (NftEntityExtended[] memory)
+        returns (NftEntity[] memory)
     {
-        NftEntityExtended[] memory tokens = new NftEntityExtended[](
-            _tokenIds.length
-        );
+        NftEntity[] memory tokens = new NftEntity[](_tokenIds.length);
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             // Get extended token data
             tokens[i] = tokenInfoExtended(_tokenIds[i]);
@@ -330,14 +352,12 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     ) internal virtual override {
         super._beforeTokenTransfer(_from, _to, _tokenId);
 
-        // Check if the token is staked
-        (bool staked, ) = stakingManager.isStaked(_tokenId);
         // Only allow unstaked tokens
-        require(!staked, "Can't transfer staked token");
+        require(nfts[_tokenId].staked == 0, "Can't transfer staked token");
         // If isn't minting
         if (_from != address(0)) {
             // Should be revealed
-            require(isRevealed(_tokenId), "Token should be revealed");
+            require(nfts[_tokenId].revealed == 1, "Token should be revealed");
         }
     }
 }

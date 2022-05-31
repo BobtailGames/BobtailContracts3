@@ -18,37 +18,40 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export declare namespace IBobtailNFT {
-  export type NftEntityExtendedStruct = {
+  export type NftEntityStruct = {
     lvl: BigNumberish;
     exp: BigNumberish;
+    timestampMint: BigNumberish;
+    block: BigNumberish;
     revealed: BigNumberish;
+    staked: BigNumberish;
     skin: BigNumberish;
     face: BigNumberish;
     rarity: BigNumberish;
-    id: BigNumberish;
-    timestampMint: BigNumberish;
     pendingReward: BigNumberish;
   };
 
-  export type NftEntityExtendedStructOutput = [
+  export type NftEntityStructOutput = [
+    number,
+    number,
+    BigNumber,
+    BigNumber,
     number,
     number,
     number,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber,
+    number,
+    number,
     BigNumber
   ] & {
     lvl: number;
     exp: number;
-    revealed: number;
-    skin: BigNumber;
-    face: BigNumber;
-    rarity: BigNumber;
-    id: BigNumber;
     timestampMint: BigNumber;
+    block: BigNumber;
+    revealed: number;
+    staked: number;
+    skin: number;
+    face: number;
+    rarity: number;
     pendingReward: BigNumber;
   };
 }
@@ -357,7 +360,7 @@ export interface StakingManager extends BaseContract {
     stakedTokensWithInfoOf(
       _account: string,
       overrides?: CallOverrides
-    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput[]]>;
+    ): Promise<[IBobtailNFT.NftEntityStructOutput[]]>;
 
     stakingCountForAddress(
       arg0: string,
@@ -444,7 +447,7 @@ export interface StakingManager extends BaseContract {
   stakedTokensWithInfoOf(
     _account: string,
     overrides?: CallOverrides
-  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
+  ): Promise<IBobtailNFT.NftEntityStructOutput[]>;
 
   stakingCountForAddress(
     arg0: string,
@@ -526,7 +529,7 @@ export interface StakingManager extends BaseContract {
     stakedTokensWithInfoOf(
       _account: string,
       overrides?: CallOverrides
-    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
+    ): Promise<IBobtailNFT.NftEntityStructOutput[]>;
 
     stakingCountForAddress(
       arg0: string,

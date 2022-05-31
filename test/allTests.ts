@@ -67,31 +67,63 @@ describe('BobTestSuite', () => {
       const Bobtail = await ethers.getContractFactory('Bobtail');
       bobtail = await Bobtail.deploy(joeRouter, bbone.address);
       await bobtail.deployed();
-
+      return;
       /*
-      await bobtail.transfer(accounts[1].address, ethers.utils.parseUnits('1'));
-     */
+      await bobtail.transfer(accounts[1].address, ethers.utils.parseUnits('1000')); // 00000
+      */
       await bobtail.transfer(accounts[1].address, await router.quote(
-        ethers.utils.parseUnits('1'),
+        ethers.utils.parseUnits('10'),
         ethers.utils.parseUnits((7698 * 73).toString()),
         ethers.utils.parseUnits('300000000'),
       ));
-      return;
+
       console.log(ethers.utils.formatEther(await bobtail.balanceOf(accounts[0].address)));
       console.log(ethers.utils.formatEther(await bobtail.balanceOf(accounts[1].address)));
-      const account = accounts[1].address;
+      const supply = await bobtail.totalSupply();
+      console.log(ethers.utils.formatEther(supply));
+      console.log('----');
+      const account = accounts[0].address;
+      const account2 = accounts[1].address;
+      let count = 0;
+      const testOutput = (val:BigNumber) => val.toString();
+      const doTest = async () => {
+        await advanceBlockAndTime(60 * 10);
+        const holdingDuration = await bobtail.levelExpDataFor(account);
+        const holdingDuration2 = await bobtail.levelExpDataFor(account2);
+        console.log(
+          testOutput(holdingDuration.holdingDuration),
+          testOutput(holdingDuration.holdPercent),
+          testOutput(holdingDuration.experience),
+          testOutput(holdingDuration.level),
 
-      setInterval(async () => {
-        const balance = await bobtail.balanceOf(account);
-        const supply = await bobtail.totalSupply();
-        const holdingDuration = await bobtail.timeShareBalanceOf(account);
-        console.log(ethers.utils.formatEther(holdingDuration.mul(balance)
-          .mul(BigNumber.from(10).pow(17)).div(BigNumber.from(60).mul(supply))));
-
-        // .mul(BigNumber.from(365)).mul(BigNumber.from(10e17))
-        await advanceBlockAndTime(60 * 60 * 24);
+          'account0',
+        );
+        console.log(
+          testOutput(holdingDuration2.holdingDuration),
+          testOutput(holdingDuration2.holdPercent),
+          testOutput(holdingDuration2.experience),
+          testOutput(holdingDuration2.level),
+          holdingDuration2.level.add(1),
+          'account1',
+        );
+        console.log('*****************');
+      };
+      const interval = setInterval(async () => {
+        count += 1;
+        await doTest();
+        if (count === 5000000000) {
+          console.log('finish');
+          clearInterval(interval);
+          const bobtail2 = bobtail.connect(accounts[1]);
+          await bobtail2.transfer(accounts[2].address, await router.quote(
+            ethers.utils.parseUnits('1'),
+            ethers.utils.parseUnits((7698 * 73).toString()),
+            ethers.utils.parseUnits('300000000'),
+          ));
+          await doTest();
+        }
       }, 1000);
-      await sleep(1000 * 10);
+      await sleep(1000 * 1200);
     });
 
     it('Should deploy FlappyAVAX', async () => {
@@ -105,7 +137,7 @@ describe('BobTestSuite', () => {
       // await matchs.initializeContract(flappyAVAX.address, staking.address);
     });
     it('Should deploy Matchs', async () => {
-      const Matchs = await ethers.getContractFactory('Matchs');
+      const Matchs = await ethers.getContractFactory('MatchManager');
       matchs = await Matchs.deploy(
         accounts[19].address,
         bbone.address,
@@ -114,7 +146,7 @@ describe('BobTestSuite', () => {
       await matchs.deployed();
     });
     it('Should deploy Staking', async () => {
-      const Staking = await ethers.getContractFactory('Staking');
+      const Staking = await ethers.getContractFactory('StakingManager');
       staking = await Staking.deploy(
         bbone.address,
         flappyAVAX.address,
@@ -131,7 +163,6 @@ describe('BobTestSuite', () => {
   });
 
   describe('BBone', async () => {
-    return;
     describe('Admin', async () => {
       /*
 
@@ -152,12 +183,12 @@ describe('BobTestSuite', () => {
           .to.be.revertedWith('Caller is not bobtail contract');
       });
       it('Should add bobtailContract with admin account', async () => {
-        await bbone.addBobtailContract(flappyAVAX.address, true);
-        await bbone.addBobtailContract(bobtail.address, true);
+        await bbone.setBobtailContract(flappyAVAX.address, true);
+        await bbone.setBobtailContract(bobtail.address, true);
       });
       it("Shouldn't add bobtailContract without admin account", async () => {
         const bbone2 = bbone.connect(accounts[2]);
-        await expect(bbone2.addBobtailContract(flappyAVAX.address, true))
+        await expect(bbone2.setBobtailContract(flappyAVAX.address, true))
           .to.be.revertedWith('Ownable: caller is not the owner');
       });
     });
@@ -213,7 +244,6 @@ describe('BobTestSuite', () => {
   });
 
   describe('Bobtail', () => {
-    return;
     it('Should add liquidity', async () => {
       const liqToken = ethers.utils.parseEther('10000');
       await bobtail.approve(joeRouter, liqToken);
@@ -251,6 +281,40 @@ describe('BobTestSuite', () => {
   });
 
   describe('FlappyAVAX:NFT', () => {
+    it('XXXX', async () => {
+      for (let i = 0; i < 4; i += 1) {
+        await (await flappyAVAX.mintWithAvax(accounts[0].address, '252', {
+          value: ethers.utils.parseEther('252'),
+        })).wait();
+      }
+
+      await advanceBlockAndTime(60 * 10);
+      function sliceIntoChunks(arr:any[], chunkSize:number) {
+        const res = [];
+        for (let i = 0; i < arr.length; i += chunkSize) {
+          const chunk = arr.slice(i, i + chunkSize);
+          res.push(chunk);
+        }
+        return res;
+      }
+
+      const items = sliceIntoChunks(await flappyAVAX.tokensOf(accounts[0].address), 100);
+
+      for (let i = 0; i < 11; i += 1) {
+        console.log(i);
+        await flappyAVAX.doRevealFor(items[i]);
+      }
+      // const items2 = sliceIntoChunks(items[3], 126);
+      // await flappyAVAX.doRevealFor(items[3]);
+      //  console.log('E');
+      //  await flappyAVAX.doRevealFor(items2[1]);
+
+      console.log('reveal');
+      for (let i = 1; i < 5; i += 1) {
+        const resTmp = await flappyAVAX.tokenInfoExtended(i.toString());
+        console.log(`${resTmp.id}, ${resTmp.skin}, ${resTmp.face}, ${resTmp.rarity}`);
+      }
+    });
     return;
     describe('Minting', () => {
       it('Should fail to mint a NFT with invalid quantity', async () => {

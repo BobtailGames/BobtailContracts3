@@ -19,52 +19,41 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export declare namespace IBobtailNFT {
-  export type NftEntityExtendedStruct = {
-    lvl: BigNumberish;
-    exp: BigNumberish;
-    revealed: BigNumberish;
-    skin: BigNumberish;
-    face: BigNumberish;
-    rarity: BigNumberish;
-    id: BigNumberish;
-    timestampMint: BigNumberish;
-    pendingReward: BigNumberish;
-  };
-
-  export type NftEntityExtendedStructOutput = [
-    number,
-    number,
-    number,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber,
-    BigNumber
-  ] & {
-    lvl: number;
-    exp: number;
-    revealed: number;
-    skin: BigNumber;
-    face: BigNumber;
-    rarity: BigNumber;
-    id: BigNumber;
-    timestampMint: BigNumber;
-    pendingReward: BigNumber;
-  };
-
   export type NftEntityStruct = {
     lvl: BigNumberish;
     exp: BigNumberish;
     timestampMint: BigNumberish;
     block: BigNumberish;
+    revealed: BigNumberish;
+    staked: BigNumberish;
+    skin: BigNumberish;
+    face: BigNumberish;
+    rarity: BigNumberish;
+    pendingReward: BigNumberish;
   };
 
-  export type NftEntityStructOutput = [number, number, BigNumber, BigNumber] & {
+  export type NftEntityStructOutput = [
+    number,
+    number,
+    BigNumber,
+    BigNumber,
+    number,
+    number,
+    number,
+    number,
+    number,
+    BigNumber
+  ] & {
     lvl: number;
     exp: number;
     timestampMint: BigNumber;
     block: BigNumber;
+    revealed: number;
+    staked: number;
+    skin: number;
+    face: number;
+    rarity: number;
+    pendingReward: BigNumber;
   };
 }
 
@@ -81,6 +70,7 @@ export interface FlappyAVAXInterface extends utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "baseSupply()": FunctionFragment;
     "bbone()": FunctionFragment;
+    "doRevealFor(uint256[])": FunctionFragment;
     "getApproved(uint256)": FunctionFragment;
     "getLevelAndExp(uint256)": FunctionFragment;
     "getTokensInfo(uint256[])": FunctionFragment;
@@ -141,6 +131,10 @@ export interface FlappyAVAXInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "bbone", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "doRevealFor",
+    values: [BigNumberish[]]
+  ): string;
   encodeFunctionData(
     functionFragment: "getApproved",
     values: [BigNumberish]
@@ -252,6 +246,10 @@ export interface FlappyAVAXInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "baseSupply", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "bbone", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "doRevealFor",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getApproved",
     data: BytesLike
   ): Result;
@@ -331,6 +329,7 @@ export interface FlappyAVAXInterface extends utils.Interface {
     "NewMint(uint256,uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "StakingManagerUpdated(address)": EventFragment;
+    "TokenRevealed(uint256,uint256,uint256,uint256)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
@@ -340,6 +339,7 @@ export interface FlappyAVAXInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "NewMint"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakingManagerUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "TokenRevealed"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
@@ -387,6 +387,13 @@ export type StakingManagerUpdatedEvent = TypedEvent<
 
 export type StakingManagerUpdatedEventFilter =
   TypedEventFilter<StakingManagerUpdatedEvent>;
+
+export type TokenRevealedEvent = TypedEvent<
+  [BigNumber, BigNumber, BigNumber, BigNumber],
+  { tokenId: BigNumber; skin: BigNumber; face: BigNumber; rarity: BigNumber }
+>;
+
+export type TokenRevealedEventFilter = TypedEventFilter<TokenRevealedEvent>;
 
 export type TransferEvent = TypedEvent<
   [string, string, BigNumber],
@@ -447,6 +454,11 @@ export interface FlappyAVAX extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<[string]>;
 
+    doRevealFor(
+      _tokenIds: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -460,7 +472,7 @@ export interface FlappyAVAX extends BaseContract {
     getTokensInfo(
       _tokenIds: BigNumberish[],
       overrides?: CallOverrides
-    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput[]]>;
+    ): Promise<[IBobtailNFT.NftEntityStructOutput[]]>;
 
     isApprovedForAll(
       owner: string,
@@ -542,7 +554,7 @@ export interface FlappyAVAX extends BaseContract {
     tokenInfoExtended(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput]>;
+    ): Promise<[IBobtailNFT.NftEntityStructOutput]>;
 
     tokenURI(
       tokenId: BigNumberish,
@@ -557,7 +569,7 @@ export interface FlappyAVAX extends BaseContract {
     tokensWithInfoOf(
       _account: string,
       overrides?: CallOverrides
-    ): Promise<[IBobtailNFT.NftEntityExtendedStructOutput[]]>;
+    ): Promise<[IBobtailNFT.NftEntityStructOutput[]]>;
 
     transferFrom(
       from: string,
@@ -596,6 +608,11 @@ export interface FlappyAVAX extends BaseContract {
 
   bbone(overrides?: CallOverrides): Promise<string>;
 
+  doRevealFor(
+    _tokenIds: BigNumberish[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   getApproved(
     tokenId: BigNumberish,
     overrides?: CallOverrides
@@ -609,7 +626,7 @@ export interface FlappyAVAX extends BaseContract {
   getTokensInfo(
     _tokenIds: BigNumberish[],
     overrides?: CallOverrides
-  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
+  ): Promise<IBobtailNFT.NftEntityStructOutput[]>;
 
   isApprovedForAll(
     owner: string,
@@ -688,7 +705,7 @@ export interface FlappyAVAX extends BaseContract {
   tokenInfoExtended(
     _tokenId: BigNumberish,
     overrides?: CallOverrides
-  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput>;
+  ): Promise<IBobtailNFT.NftEntityStructOutput>;
 
   tokenURI(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
@@ -697,7 +714,7 @@ export interface FlappyAVAX extends BaseContract {
   tokensWithInfoOf(
     _account: string,
     overrides?: CallOverrides
-  ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
+  ): Promise<IBobtailNFT.NftEntityStructOutput[]>;
 
   transferFrom(
     from: string,
@@ -736,6 +753,11 @@ export interface FlappyAVAX extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<string>;
 
+    doRevealFor(
+      _tokenIds: BigNumberish[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     getApproved(
       tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -749,7 +771,7 @@ export interface FlappyAVAX extends BaseContract {
     getTokensInfo(
       _tokenIds: BigNumberish[],
       overrides?: CallOverrides
-    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
+    ): Promise<IBobtailNFT.NftEntityStructOutput[]>;
 
     isApprovedForAll(
       owner: string,
@@ -826,7 +848,7 @@ export interface FlappyAVAX extends BaseContract {
     tokenInfoExtended(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
-    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput>;
+    ): Promise<IBobtailNFT.NftEntityStructOutput>;
 
     tokenURI(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
@@ -835,7 +857,7 @@ export interface FlappyAVAX extends BaseContract {
     tokensWithInfoOf(
       _account: string,
       overrides?: CallOverrides
-    ): Promise<IBobtailNFT.NftEntityExtendedStructOutput[]>;
+    ): Promise<IBobtailNFT.NftEntityStructOutput[]>;
 
     transferFrom(
       from: string,
@@ -906,6 +928,19 @@ export interface FlappyAVAX extends BaseContract {
       stakingManager?: null
     ): StakingManagerUpdatedEventFilter;
 
+    "TokenRevealed(uint256,uint256,uint256,uint256)"(
+      tokenId?: null,
+      skin?: null,
+      face?: null,
+      rarity?: null
+    ): TokenRevealedEventFilter;
+    TokenRevealed(
+      tokenId?: null,
+      skin?: null,
+      face?: null,
+      rarity?: null
+    ): TokenRevealedEventFilter;
+
     "Transfer(address,address,uint256)"(
       from?: string | null,
       to?: string | null,
@@ -942,6 +977,11 @@ export interface FlappyAVAX extends BaseContract {
     baseSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
     bbone(overrides?: CallOverrides): Promise<BigNumber>;
+
+    doRevealFor(
+      _tokenIds: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     getApproved(
       tokenId: BigNumberish,
@@ -1092,6 +1132,11 @@ export interface FlappyAVAX extends BaseContract {
     baseSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     bbone(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    doRevealFor(
+      _tokenIds: BigNumberish[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     getApproved(
       tokenId: BigNumberish,

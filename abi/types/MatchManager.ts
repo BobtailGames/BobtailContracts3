@@ -23,6 +23,7 @@ export interface MatchManagerInterface extends utils.Interface {
     "activeMatchsCount(string)": FunctionFragment;
     "allowedNftContract()": FunctionFragment;
     "bbone()": FunctionFragment;
+    "calculateReward(uint256,uint256)": FunctionFragment;
     "claimReward(uint256[],uint256[],bytes32,bytes32,uint8)": FunctionFragment;
     "currentMatchForAddress(address)": FunctionFragment;
     "currentMatchForToken(uint256)": FunctionFragment;
@@ -59,6 +60,10 @@ export interface MatchManagerInterface extends utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "bbone", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "calculateReward",
+    values: [BigNumberish, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "claimReward",
     values: [BigNumberish[], BigNumberish[], BytesLike, BytesLike, BigNumberish]
@@ -167,6 +172,10 @@ export interface MatchManagerInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "bbone", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "calculateReward",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "claimReward",
     data: BytesLike
   ): Result;
@@ -259,7 +268,7 @@ export interface MatchManagerInterface extends utils.Interface {
     "MatchDurationUpdated(uint256)": EventFragment;
     "MaxPlayersPerMatchUpdated(uint256)": EventFragment;
     "NewAddressInMatch(address,uint256,uint256)": EventFragment;
-    "NewMatch(uint256,uint256,uint256,uint256,uint256)": EventFragment;
+    "NewMatch(uint256,uint256,uint256,uint256,uint256,uint256[],uint256)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "PortionRewardPerRankUpdated(uint256[])": EventFragment;
     "RewardClaimed(address,uint256[],uint256)": EventFragment;
@@ -303,13 +312,23 @@ export type NewAddressInMatchEventFilter =
   TypedEventFilter<NewAddressInMatchEvent>;
 
 export type NewMatchEvent = TypedEvent<
-  [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber],
+  [
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber[],
+    BigNumber
+  ],
   {
     matchId: BigNumber;
     slot: BigNumber;
     timestamp: BigNumber;
     duration: BigNumber;
     maxPlayers: BigNumber;
+    rewards: BigNumber[];
+    totalRewardPerMatch: BigNumber;
   }
 >;
 
@@ -383,6 +402,12 @@ export interface MatchManager extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<[string]>;
 
+    calculateReward(
+      _rank: BigNumberish,
+      _matchId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
     claimReward(
       _matchIds: BigNumberish[],
       _ranks: BigNumberish[],
@@ -438,13 +463,22 @@ export interface MatchManager extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [boolean, boolean, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        boolean,
+        boolean,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         started: boolean;
         finished: boolean;
         timestamp: BigNumber;
         duration: BigNumber;
         maxPlayers: BigNumber;
         slot: BigNumber;
+        totalRewardPerMatch: BigNumber;
       }
     >;
 
@@ -513,6 +547,12 @@ export interface MatchManager extends BaseContract {
 
   bbone(overrides?: CallOverrides): Promise<string>;
 
+  calculateReward(
+    _rank: BigNumberish,
+    _matchId: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<BigNumber>;
+
   claimReward(
     _matchIds: BigNumberish[],
     _ranks: BigNumberish[],
@@ -568,13 +608,22 @@ export interface MatchManager extends BaseContract {
     arg0: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [boolean, boolean, BigNumber, BigNumber, BigNumber, BigNumber] & {
+    [
+      boolean,
+      boolean,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber,
+      BigNumber
+    ] & {
       started: boolean;
       finished: boolean;
       timestamp: BigNumber;
       duration: BigNumber;
       maxPlayers: BigNumber;
       slot: BigNumber;
+      totalRewardPerMatch: BigNumber;
     }
   >;
 
@@ -643,6 +692,12 @@ export interface MatchManager extends BaseContract {
 
     bbone(overrides?: CallOverrides): Promise<string>;
 
+    calculateReward(
+      _rank: BigNumberish,
+      _matchId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     claimReward(
       _matchIds: BigNumberish[],
       _ranks: BigNumberish[],
@@ -698,13 +753,22 @@ export interface MatchManager extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [boolean, boolean, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [
+        boolean,
+        boolean,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber,
+        BigNumber
+      ] & {
         started: boolean;
         finished: boolean;
         timestamp: BigNumber;
         duration: BigNumber;
         maxPlayers: BigNumber;
         slot: BigNumber;
+        totalRewardPerMatch: BigNumber;
       }
     >;
 
@@ -786,19 +850,23 @@ export interface MatchManager extends BaseContract {
       tokenId?: null
     ): NewAddressInMatchEventFilter;
 
-    "NewMatch(uint256,uint256,uint256,uint256,uint256)"(
+    "NewMatch(uint256,uint256,uint256,uint256,uint256,uint256[],uint256)"(
       matchId?: null,
       slot?: null,
       timestamp?: null,
       duration?: null,
-      maxPlayers?: null
+      maxPlayers?: null,
+      rewards?: null,
+      totalRewardPerMatch?: null
     ): NewMatchEventFilter;
     NewMatch(
       matchId?: null,
       slot?: null,
       timestamp?: null,
       duration?: null,
-      maxPlayers?: null
+      maxPlayers?: null,
+      rewards?: null,
+      totalRewardPerMatch?: null
     ): NewMatchEventFilter;
 
     "OwnershipTransferred(address,address)"(
@@ -845,6 +913,12 @@ export interface MatchManager extends BaseContract {
     allowedNftContract(overrides?: CallOverrides): Promise<BigNumber>;
 
     bbone(overrides?: CallOverrides): Promise<BigNumber>;
+
+    calculateReward(
+      _rank: BigNumberish,
+      _matchId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     claimReward(
       _matchIds: BigNumberish[],
@@ -958,6 +1032,12 @@ export interface MatchManager extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     bbone(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    calculateReward(
+      _rank: BigNumberish,
+      _matchId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     claimReward(
       _matchIds: BigNumberish[],

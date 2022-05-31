@@ -37,6 +37,8 @@ contract MatchManager is ReentrancyGuard, Ownable {
         uint256 maxPlayers;
         uint256 slot;
         address[] playersAddress;
+        uint256[] portionRewardPerRank;
+        uint256 totalRewardPerMatch;
         mapping(address => Player) players;
         mapping(uint256 => uint256) claimedRanks;
     }
@@ -112,7 +114,8 @@ contract MatchManager is ReentrancyGuard, Ownable {
     event PortionRewardPerRankUpdated(uint256[] portionRewardPerRank);
 
     /// @notice The portion related to the percentage to be paid from the reward
-    mapping(uint256 => uint256) private portionRewardPerRank;
+    //mapping(uint256 => uint256) private portionRewardPerRank;
+    uint256[] private portionRewardPerRank = new uint256[](10);
 
     /// @notice Set rewards per rank
     function setPortionRewardPerRank(uint256[] calldata _portionRewardPerRank)
@@ -152,6 +155,9 @@ contract MatchManager is ReentrancyGuard, Ownable {
                 _portionRewardPerRank[9] < 5001,
             "Invalid value <5001"
         );
+        portionRewardPerRank = _portionRewardPerRank;
+
+        /*
         // Store new portion reward
         portionRewardPerRank[0] = _portionRewardPerRank[0];
         portionRewardPerRank[1] = _portionRewardPerRank[1];
@@ -163,6 +169,7 @@ contract MatchManager is ReentrancyGuard, Ownable {
         portionRewardPerRank[7] = _portionRewardPerRank[7];
         portionRewardPerRank[8] = _portionRewardPerRank[8];
         portionRewardPerRank[9] = _portionRewardPerRank[9];
+        */
         emit PortionRewardPerRankUpdated(_portionRewardPerRank);
     }
 
@@ -171,7 +178,7 @@ contract MatchManager is ReentrancyGuard, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice How much a match should last
-    uint256 public matchDuration = 10 minutes;
+    uint256 public matchDuration = 1 minutes;
 
     event MatchDurationUpdated(uint256 matchDuration);
 
@@ -265,7 +272,9 @@ contract MatchManager is ReentrancyGuard, Ownable {
         uint256 slot,
         uint256 timestamp,
         uint256 duration,
-        uint256 maxPlayers
+        uint256 maxPlayers,
+        uint256[] rewards,
+        uint256 totalRewardPerMatch
     );
 
     event NewAddressInMatch(address player, uint256 matchId, uint256 tokenId);
@@ -402,7 +411,7 @@ contract MatchManager is ReentrancyGuard, Ownable {
                 "Rank reward has been claimed"
             );
             // Get reward based on signed rank
-            uint256 reward = calculateReward(_ranks[i]);
+            uint256 reward = calculateReward(_ranks[i], _matchIds[i]);
             // Set sender for this match as claimed
             matchs[_matchIds[i]].players[msg.sender].claimed = true;
             // Set rank for this match as claimed
@@ -534,12 +543,17 @@ contract MatchManager is ReentrancyGuard, Ownable {
             m.duration = matchDuration; // Store match duration to prevent bugs if it's updated during match
             m.maxPlayers = maxPlayersPerMatch; // Store max players to prevent bugs if it's updated during match
             m.slot = slot; // Save slot of match
+            m.portionRewardPerRank = portionRewardPerRank;
+            m.totalRewardPerMatch = totalRewardPerMatch;
+            //TODO Quitar para menos gas
             emit NewMatch(
                 matchId,
                 slot,
                 block.timestamp,
                 matchDuration,
-                maxPlayersPerMatch
+                maxPlayersPerMatch,
+                portionRewardPerRank,
+                totalRewardPerMatch
             );
         }
     }
@@ -566,27 +580,35 @@ contract MatchManager is ReentrancyGuard, Ownable {
 
     /// @notice Calculate the reward for the rank of one match, Of all the totalRewardPerMatch a
     /// portion is distributed to the leaderboard based on the rank
-    function calculateReward(uint256 _rank) private view returns (uint256) {
+    function calculateReward(uint256 _rank, uint256 _matchId)
+        public
+        view
+        returns (uint256)
+    {
         // Get portion based on rank
         uint256 portion;
+
+        uint256[] memory portionRewardPR = matchs[_matchId]
+            .portionRewardPerRank;
+
         if (_rank >= 1 && _rank <= 5) {
             //#1 to #5
-            portion = portionRewardPerRank[_rank - 1];
+            portion = portionRewardPR[_rank - 1];
         } else if (_rank >= 6 && _rank <= 10) {
             //#6 to #10
-            portion = portionRewardPerRank[5];
+            portion = portionRewardPR[5];
         } else if (_rank >= 11 && _rank <= 20) {
             //#11 to #20
-            portion = portionRewardPerRank[6];
+            portion = portionRewardPR[6];
         } else if (_rank >= 21 && _rank <= 30) {
             //#21 to #30
-            portion = portionRewardPerRank[7];
+            portion = portionRewardPR[7];
         } else if (_rank >= 31 && _rank <= 40) {
             //#31 to #40
-            portion = portionRewardPerRank[8];
+            portion = portionRewardPR[8];
         } else if (_rank >= 41 && _rank <= 50) {
             //#41 to #50
-            portion = portionRewardPerRank[9];
+            portion = portionRewardPR[9];
         }
         // return reward to pay, portion shoudn't be greater than 5000=50%
         return (totalRewardPerMatch * portion) * (10**14);

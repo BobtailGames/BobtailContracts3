@@ -21,7 +21,6 @@ export interface BBoneInterface extends utils.Interface {
   contractName: "BBone";
   functions: {
     "addLiquidity(uint256,uint8)": FunctionFragment;
-    "addSwapPair(address,bool)": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
@@ -38,6 +37,7 @@ export interface BBoneInterface extends utils.Interface {
     "setBobtailContract(address,bool)": FunctionFragment;
     "setMatchManager(address)": FunctionFragment;
     "setStakingManager(address)": FunctionFragment;
+    "setSwapPair(address,bool)": FunctionFragment;
     "stakingManager()": FunctionFragment;
     "symbol()": FunctionFragment;
     "totalSupply()": FunctionFragment;
@@ -49,10 +49,6 @@ export interface BBoneInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "addLiquidity",
     values: [BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "addSwapPair",
-    values: [string, boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
@@ -104,6 +100,10 @@ export interface BBoneInterface extends utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "setSwapPair",
+    values: [string, boolean]
+  ): string;
+  encodeFunctionData(
     functionFragment: "stakingManager",
     values?: undefined
   ): string;
@@ -127,10 +127,6 @@ export interface BBoneInterface extends utils.Interface {
 
   decodeFunctionResult(
     functionFragment: "addLiquidity",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "addSwapPair",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
@@ -177,6 +173,10 @@ export interface BBoneInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setSwapPair",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "stakingManager",
     data: BytesLike
   ): Result;
@@ -197,18 +197,26 @@ export interface BBoneInterface extends utils.Interface {
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
+    "BobtailContractUpdated(address,bool)": EventFragment;
     "LiquidityAdded(uint256,uint256,uint256,uint8)": EventFragment;
     "MatchManagerUpdated(address)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
+    "PayMatchReward(address,uint256)": EventFragment;
+    "PayStakingReward(address,uint256)": EventFragment;
     "StakingManagerUpdated(address)": EventFragment;
+    "SwapPairUpdated(address,bool)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BobtailContractUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "LiquidityAdded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "MatchManagerUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "PayMatchReward"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "PayStakingReward"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakingManagerUpdated"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "SwapPairUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
@@ -218,6 +226,14 @@ export type ApprovalEvent = TypedEvent<
 >;
 
 export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
+
+export type BobtailContractUpdatedEvent = TypedEvent<
+  [string, boolean],
+  { _address: string; _status: boolean }
+>;
+
+export type BobtailContractUpdatedEventFilter =
+  TypedEventFilter<BobtailContractUpdatedEvent>;
 
 export type LiquidityAddedEvent = TypedEvent<
   [BigNumber, BigNumber, BigNumber, number],
@@ -233,7 +249,7 @@ export type LiquidityAddedEventFilter = TypedEventFilter<LiquidityAddedEvent>;
 
 export type MatchManagerUpdatedEvent = TypedEvent<
   [string],
-  { matchDuration: string }
+  { _matchManager: string }
 >;
 
 export type MatchManagerUpdatedEventFilter =
@@ -247,13 +263,35 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
+export type PayMatchRewardEvent = TypedEvent<
+  [string, BigNumber],
+  { _to: string; _amount: BigNumber }
+>;
+
+export type PayMatchRewardEventFilter = TypedEventFilter<PayMatchRewardEvent>;
+
+export type PayStakingRewardEvent = TypedEvent<
+  [string, BigNumber],
+  { _to: string; _amount: BigNumber }
+>;
+
+export type PayStakingRewardEventFilter =
+  TypedEventFilter<PayStakingRewardEvent>;
+
 export type StakingManagerUpdatedEvent = TypedEvent<
   [string],
-  { matchDuration: string }
+  { _stakingManager: string }
 >;
 
 export type StakingManagerUpdatedEventFilter =
   TypedEventFilter<StakingManagerUpdatedEvent>;
+
+export type SwapPairUpdatedEvent = TypedEvent<
+  [string, boolean],
+  { _address: string; _status: boolean }
+>;
+
+export type SwapPairUpdatedEventFilter = TypedEventFilter<SwapPairUpdatedEvent>;
 
 export type TransferEvent = TypedEvent<
   [string, string, BigNumber],
@@ -293,12 +331,6 @@ export interface BBone extends BaseContract {
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    addSwapPair(
-      _address: string,
-      _status: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -370,6 +402,12 @@ export interface BBone extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setSwapPair(
+      _address: string,
+      _status: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     stakingManager(overrides?: CallOverrides): Promise<[string]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
@@ -398,12 +436,6 @@ export interface BBone extends BaseContract {
   addLiquidity(
     _amountAvax: BigNumberish,
     _liquidityType: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  addSwapPair(
-    _address: string,
-    _status: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -475,6 +507,12 @@ export interface BBone extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setSwapPair(
+    _address: string,
+    _status: boolean,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   stakingManager(overrides?: CallOverrides): Promise<string>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
@@ -503,12 +541,6 @@ export interface BBone extends BaseContract {
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    addSwapPair(
-      _address: string,
-      _status: boolean,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -578,6 +610,12 @@ export interface BBone extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setSwapPair(
+      _address: string,
+      _status: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     stakingManager(overrides?: CallOverrides): Promise<string>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
@@ -615,6 +653,15 @@ export interface BBone extends BaseContract {
       value?: null
     ): ApprovalEventFilter;
 
+    "BobtailContractUpdated(address,bool)"(
+      _address?: null,
+      _status?: null
+    ): BobtailContractUpdatedEventFilter;
+    BobtailContractUpdated(
+      _address?: null,
+      _status?: null
+    ): BobtailContractUpdatedEventFilter;
+
     "LiquidityAdded(uint256,uint256,uint256,uint8)"(
       amountToken?: null,
       amountAVAX?: null,
@@ -629,9 +676,9 @@ export interface BBone extends BaseContract {
     ): LiquidityAddedEventFilter;
 
     "MatchManagerUpdated(address)"(
-      matchDuration?: null
+      _matchManager?: null
     ): MatchManagerUpdatedEventFilter;
-    MatchManagerUpdated(matchDuration?: null): MatchManagerUpdatedEventFilter;
+    MatchManagerUpdated(_matchManager?: null): MatchManagerUpdatedEventFilter;
 
     "OwnershipTransferred(address,address)"(
       previousOwner?: string | null,
@@ -642,12 +689,33 @@ export interface BBone extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
+    "PayMatchReward(address,uint256)"(
+      _to?: null,
+      _amount?: null
+    ): PayMatchRewardEventFilter;
+    PayMatchReward(_to?: null, _amount?: null): PayMatchRewardEventFilter;
+
+    "PayStakingReward(address,uint256)"(
+      _to?: null,
+      _amount?: null
+    ): PayStakingRewardEventFilter;
+    PayStakingReward(_to?: null, _amount?: null): PayStakingRewardEventFilter;
+
     "StakingManagerUpdated(address)"(
-      matchDuration?: null
+      _stakingManager?: null
     ): StakingManagerUpdatedEventFilter;
     StakingManagerUpdated(
-      matchDuration?: null
+      _stakingManager?: null
     ): StakingManagerUpdatedEventFilter;
+
+    "SwapPairUpdated(address,bool)"(
+      _address?: null,
+      _status?: null
+    ): SwapPairUpdatedEventFilter;
+    SwapPairUpdated(
+      _address?: null,
+      _status?: null
+    ): SwapPairUpdatedEventFilter;
 
     "Transfer(address,address,uint256)"(
       from?: string | null,
@@ -665,12 +733,6 @@ export interface BBone extends BaseContract {
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    addSwapPair(
-      _address: string,
-      _status: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -742,6 +804,12 @@ export interface BBone extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setSwapPair(
+      _address: string,
+      _status: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     stakingManager(overrides?: CallOverrides): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
@@ -771,12 +839,6 @@ export interface BBone extends BaseContract {
     addLiquidity(
       _amountAvax: BigNumberish,
       _liquidityType: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    addSwapPair(
-      _address: string,
-      _status: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -848,6 +910,12 @@ export interface BBone extends BaseContract {
 
     setStakingManager(
       _stakingManager: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setSwapPair(
+      _address: string,
+      _status: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

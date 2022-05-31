@@ -25,9 +25,12 @@ export interface BobtailInterface extends utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
+    "expAndLvl(address)": FunctionFragment;
+    "expAndLvlExcluded(address)": FunctionFragment;
     "feePercentage()": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "joePair()": FunctionFragment;
+    "levelExpDataFor(address)": FunctionFragment;
     "minTokensBeforeSwap()": FunctionFragment;
     "name()": FunctionFragment;
     "owner()": FunctionFragment;
@@ -38,8 +41,6 @@ export interface BobtailInterface extends utils.Interface {
     "setSwapAndLiquifyEnabled(bool)": FunctionFragment;
     "swapAndLiquifyEnabled()": FunctionFragment;
     "symbol()": FunctionFragment;
-    "timeShareBalanceOf(address)": FunctionFragment;
-    "timeShares(address)": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
@@ -60,6 +61,11 @@ export interface BobtailInterface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     values: [string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "expAndLvl", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "expAndLvlExcluded",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "feePercentage",
     values?: undefined
@@ -69,6 +75,10 @@ export interface BobtailInterface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "joePair", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "levelExpDataFor",
+    values: [string]
+  ): string;
   encodeFunctionData(
     functionFragment: "minTokensBeforeSwap",
     values?: undefined
@@ -101,11 +111,6 @@ export interface BobtailInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "timeShareBalanceOf",
-    values: [string]
-  ): string;
-  encodeFunctionData(functionFragment: "timeShares", values: [string]): string;
-  encodeFunctionData(
     functionFragment: "totalSupply",
     values?: undefined
   ): string;
@@ -130,6 +135,11 @@ export interface BobtailInterface extends utils.Interface {
     functionFragment: "decreaseAllowance",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "expAndLvl", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "expAndLvlExcluded",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "feePercentage",
     data: BytesLike
@@ -139,6 +149,10 @@ export interface BobtailInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "joePair", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "levelExpDataFor",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "minTokensBeforeSwap",
     data: BytesLike
@@ -165,11 +179,6 @@ export interface BobtailInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "timeShareBalanceOf",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "timeShares", data: BytesLike): Result;
-  decodeFunctionResult(
     functionFragment: "totalSupply",
     data: BytesLike
   ): Result;
@@ -189,10 +198,9 @@ export interface BobtailInterface extends utils.Interface {
     "LpPairsUpdated(address,bool)": EventFragment;
     "MinTokensBeforeSwapUpdated(uint128)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
-    "SwapAndLiquify(uint256,uint256,uint256)": EventFragment;
     "SwapAndLiquifyEnabledUpdated(bool)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
-    "UpdateTimeShare(address,uint256)": EventFragment;
+    "UpdateLevelExpTimestampFor(address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
@@ -200,12 +208,11 @@ export interface BobtailInterface extends utils.Interface {
   getEvent(nameOrSignatureOrTopic: "LpPairsUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "MinTokensBeforeSwapUpdated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "SwapAndLiquify"): EventFragment;
   getEvent(
     nameOrSignatureOrTopic: "SwapAndLiquifyEnabledUpdated"
   ): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UpdateTimeShare"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "UpdateLevelExpTimestampFor"): EventFragment;
 }
 
 export type ApprovalEvent = TypedEvent<
@@ -246,17 +253,6 @@ export type OwnershipTransferredEvent = TypedEvent<
 export type OwnershipTransferredEventFilter =
   TypedEventFilter<OwnershipTransferredEvent>;
 
-export type SwapAndLiquifyEvent = TypedEvent<
-  [BigNumber, BigNumber, BigNumber],
-  {
-    tokensSwapped: BigNumber;
-    ethReceived: BigNumber;
-    tokensIntoLiqudity: BigNumber;
-  }
->;
-
-export type SwapAndLiquifyEventFilter = TypedEventFilter<SwapAndLiquifyEvent>;
-
 export type SwapAndLiquifyEnabledUpdatedEvent = TypedEvent<
   [boolean],
   { enabled: boolean }
@@ -272,12 +268,13 @@ export type TransferEvent = TypedEvent<
 
 export type TransferEventFilter = TypedEventFilter<TransferEvent>;
 
-export type UpdateTimeShareEvent = TypedEvent<
+export type UpdateLevelExpTimestampForEvent = TypedEvent<
   [string, BigNumber],
-  { owner: string; balance: BigNumber }
+  { owner: string; timestamp: BigNumber }
 >;
 
-export type UpdateTimeShareEventFilter = TypedEventFilter<UpdateTimeShareEvent>;
+export type UpdateLevelExpTimestampForEventFilter =
+  TypedEventFilter<UpdateLevelExpTimestampForEvent>;
 
 export interface Bobtail extends BaseContract {
   contractName: "Bobtail";
@@ -329,6 +326,21 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    expAndLvl(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & {
+        lastTransferTimestamp: BigNumber;
+        aditionalExp: BigNumber;
+      }
+    >;
+
+    expAndLvlExcluded(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
     feePercentage(overrides?: CallOverrides): Promise<[number]>;
 
     increaseAllowance(
@@ -338,6 +350,18 @@ export interface Bobtail extends BaseContract {
     ): Promise<ContractTransaction>;
 
     joePair(overrides?: CallOverrides): Promise<[string]>;
+
+    levelExpDataFor(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        experience: BigNumber;
+        level: BigNumber;
+        holdPercent: BigNumber;
+        holdingDuration: BigNumber;
+      }
+    >;
 
     minTokensBeforeSwap(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -373,21 +397,6 @@ export interface Bobtail extends BaseContract {
     swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<[boolean]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
-
-    timeShareBalanceOf(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { holdingDuration: BigNumber }>;
-
-    timeShares(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & {
-        lastBlockTimestamp: BigNumber;
-        lastBalance: BigNumber;
-      }
-    >;
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -432,6 +441,18 @@ export interface Bobtail extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  expAndLvl(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber] & {
+      lastTransferTimestamp: BigNumber;
+      aditionalExp: BigNumber;
+    }
+  >;
+
+  expAndLvlExcluded(arg0: string, overrides?: CallOverrides): Promise<boolean>;
+
   feePercentage(overrides?: CallOverrides): Promise<number>;
 
   increaseAllowance(
@@ -441,6 +462,18 @@ export interface Bobtail extends BaseContract {
   ): Promise<ContractTransaction>;
 
   joePair(overrides?: CallOverrides): Promise<string>;
+
+  levelExpDataFor(
+    _address: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, BigNumber] & {
+      experience: BigNumber;
+      level: BigNumber;
+      holdPercent: BigNumber;
+      holdingDuration: BigNumber;
+    }
+  >;
 
   minTokensBeforeSwap(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -476,21 +509,6 @@ export interface Bobtail extends BaseContract {
   swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<boolean>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
-
-  timeShareBalanceOf(
-    _address: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  timeShares(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<
-    [BigNumber, BigNumber] & {
-      lastBlockTimestamp: BigNumber;
-      lastBalance: BigNumber;
-    }
-  >;
 
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -535,6 +553,21 @@ export interface Bobtail extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    expAndLvl(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber] & {
+        lastTransferTimestamp: BigNumber;
+        aditionalExp: BigNumber;
+      }
+    >;
+
+    expAndLvlExcluded(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
     feePercentage(overrides?: CallOverrides): Promise<number>;
 
     increaseAllowance(
@@ -544,6 +577,18 @@ export interface Bobtail extends BaseContract {
     ): Promise<boolean>;
 
     joePair(overrides?: CallOverrides): Promise<string>;
+
+    levelExpDataFor(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        experience: BigNumber;
+        level: BigNumber;
+        holdPercent: BigNumber;
+        holdingDuration: BigNumber;
+      }
+    >;
 
     minTokensBeforeSwap(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -577,21 +622,6 @@ export interface Bobtail extends BaseContract {
     swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<boolean>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
-
-    timeShareBalanceOf(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    timeShares(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [BigNumber, BigNumber] & {
-        lastBlockTimestamp: BigNumber;
-        lastBalance: BigNumber;
-      }
-    >;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -653,17 +683,6 @@ export interface Bobtail extends BaseContract {
       newOwner?: string | null
     ): OwnershipTransferredEventFilter;
 
-    "SwapAndLiquify(uint256,uint256,uint256)"(
-      tokensSwapped?: null,
-      ethReceived?: null,
-      tokensIntoLiqudity?: null
-    ): SwapAndLiquifyEventFilter;
-    SwapAndLiquify(
-      tokensSwapped?: null,
-      ethReceived?: null,
-      tokensIntoLiqudity?: null
-    ): SwapAndLiquifyEventFilter;
-
     "SwapAndLiquifyEnabledUpdated(bool)"(
       enabled?: null
     ): SwapAndLiquifyEnabledUpdatedEventFilter;
@@ -682,14 +701,14 @@ export interface Bobtail extends BaseContract {
       value?: null
     ): TransferEventFilter;
 
-    "UpdateTimeShare(address,uint256)"(
+    "UpdateLevelExpTimestampFor(address,uint256)"(
       owner?: string | null,
-      balance?: null
-    ): UpdateTimeShareEventFilter;
-    UpdateTimeShare(
+      timestamp?: null
+    ): UpdateLevelExpTimestampForEventFilter;
+    UpdateLevelExpTimestampFor(
       owner?: string | null,
-      balance?: null
-    ): UpdateTimeShareEventFilter;
+      timestamp?: null
+    ): UpdateLevelExpTimestampForEventFilter;
   };
 
   estimateGas: {
@@ -715,6 +734,13 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    expAndLvl(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    expAndLvlExcluded(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     feePercentage(overrides?: CallOverrides): Promise<BigNumber>;
 
     increaseAllowance(
@@ -724,6 +750,11 @@ export interface Bobtail extends BaseContract {
     ): Promise<BigNumber>;
 
     joePair(overrides?: CallOverrides): Promise<BigNumber>;
+
+    levelExpDataFor(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     minTokensBeforeSwap(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -759,13 +790,6 @@ export interface Bobtail extends BaseContract {
     swapAndLiquifyEnabled(overrides?: CallOverrides): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
-
-    timeShareBalanceOf(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    timeShares(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -814,6 +838,16 @@ export interface Bobtail extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    expAndLvl(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    expAndLvlExcluded(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     feePercentage(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     increaseAllowance(
@@ -823,6 +857,11 @@ export interface Bobtail extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     joePair(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    levelExpDataFor(
+      _address: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     minTokensBeforeSwap(
       overrides?: CallOverrides
@@ -862,16 +901,6 @@ export interface Bobtail extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    timeShareBalanceOf(
-      _address: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    timeShares(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

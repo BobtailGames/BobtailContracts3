@@ -129,6 +129,7 @@ contract('All', (accounts) => {
   });
 
   it('FlappyAVAX: should mint a NFT', async () => {
+    return;
     const flappyAvax = await FlappyAVAX.deployed();
     const bbone = await BBone.deployed();
 

@@ -294,7 +294,7 @@ contract StakingManager is Ownable {
     function stakedTokensWithInfoOf(address _account)
         external
         view
-        returns (IBobtailNFT.NftEntityExtended[] memory)
+        returns (IBobtailNFT.NftEntity[] memory)
     {
         /// Get array of staked tokens ids
         uint256[] memory tokenIds = _stakedTokensOf(_account);
