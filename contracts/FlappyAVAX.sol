@@ -22,7 +22,7 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     //////////////////////////////////////////////////////////////*/
     uint8 public constant MAX_LEVELXP = 100;
     uint256 public constant MAX_SUPPLY = 1008;
-    uint256 public constant MAX_MINTSPERTX = 1008;
+    uint256 public constant MAX_MINTSPERTX = 10;
     uint256 public constant MINT_PRICE_AVAX = 1 ether; // 1 AVAX
     uint256 public constant REVEAL_TIME = 90 seconds;
     uint256 public constant ONE_EXP_PER_TIME = 864 seconds;
@@ -85,6 +85,7 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
             // Store Nft default data
             // stored for reveal purposes
             nfts[tokenId] = NftEntity({
+                id: tokenId,
                 lvl: 1, // default level
                 exp: 1, // default exp
                 block: block.number, // stored for reveal purposes
@@ -116,26 +117,6 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         uint256 face,
         uint256 rarity
     );
-
-    function doRevealFor(uint256[] memory _tokenIds) external {
-        for (uint256 i = 0; i < _tokenIds.length; i++) {
-            if (
-                block.timestamp > nfts[_tokenIds[i]].timestampMint &&
-                (block.timestamp - nfts[_tokenIds[i]].timestampMint) >
-                REVEAL_TIME
-            ) {
-                (uint8 rarity, uint8 skin, uint8 face) = getRevealInfo(
-                    _tokenIds[i]
-                );
-                nftsRevealed[skin][face] = true;
-                nfts[_tokenIds[i]].skin = skin;
-                nfts[_tokenIds[i]].face = face;
-                nfts[_tokenIds[i]].rarity = rarity;
-                nfts[_tokenIds[i]].revealed = 1;
-                emit TokenRevealed(_tokenIds[i], skin, face, rarity);
-            }
-        }
-    }
 
     function isRevealed(uint256 _tokenId) external view returns (bool) {
         return nfts[_tokenId].revealed == 1;
@@ -183,39 +164,31 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         require(skin != 0 && face != 0, "No random data generated");
     }
 
+    function doRevealFor(uint256[] memory _tokenIds) external {
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            if (
+                block.timestamp > nfts[_tokenIds[i]].timestampMint &&
+                (block.timestamp - nfts[_tokenIds[i]].timestampMint) >
+                REVEAL_TIME
+            ) {
+                (uint8 rarity, uint8 skin, uint8 face) = getRevealInfo(
+                    _tokenIds[i]
+                );
+                nftsRevealed[skin][face] = true;
+                nfts[_tokenIds[i]].skin = skin;
+                nfts[_tokenIds[i]].face = face;
+                nfts[_tokenIds[i]].rarity = rarity;
+                nfts[_tokenIds[i]].revealed = 1;
+                emit TokenRevealed(_tokenIds[i], skin, face, rarity);
+            }
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                              TOKEN DATA 
     //////////////////////////////////////////////////////////////*/
     /// @notice Level, exp, and mint data
     mapping(uint256 => NftEntity) private nfts;
-
-    /// @notice Returns the ids of tokens owned by a address we iterate all existing tokens to
-    ///         make this function gas efficient, it's not used in write operations just externally
-    function tokenInfo(uint256 _tokenId)
-        external
-        view
-        returns (NftEntity memory)
-    {
-        return nfts[_tokenId];
-    }
-
-    /// @notice Returns the info from a token id with extended data
-    /// it's not used in write operations to prevent bugs.
-    function tokenInfoExtended(uint256 _tokenId)
-        public
-        view
-        returns (NftEntity memory)
-    {
-        NftEntity memory token = nfts[_tokenId];
-        // If token is revealed get reveal info
-        if (token.revealed == 1) {
-            if (token.staked == 1) {
-                // If is staked get pending reward
-                token.pendingReward = stakingManager.stakingReward(_tokenId);
-            }
-        }
-        return token;
-    }
 
     /// @notice Returns the ids of tokens owned by a address we iterate all existing tokens to
     ///         make this function gas efficient, it's not used in write operations just externally
@@ -234,10 +207,50 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         view
         returns (NftEntity[] memory)
     {
-        uint256[] memory tokenIds = _findTokensOf(_account);
-        return getTokensInfo(tokenIds);
+        return getTokensInfo(_findTokensOf(_account));
     }
 
+    /// @notice Returns the ids of tokens owned by a address we iterate all existing tokens to
+    ///         make this function gas efficient, it's not used in write operations just externally
+    function tokenInfo(uint256 _tokenId)
+        public
+        view
+        returns (NftEntity memory)
+    {
+        NftEntity memory token = nfts[_tokenId];
+        if (token.revealed == 1) {
+            (bool staked, ) = stakingManager.isStaked(_tokenId);
+            if (staked) {
+                token.staked = 1;
+                (token.lvl, token.exp) = getLevelAndExp(_tokenId);
+                token.pendingReward = stakingManager.stakingReward(_tokenId);
+            }
+        }
+        return token;
+    }
+
+    /*
+
+    /// @notice Returns the info from a token id with extended data
+    /// it's not used in write operations to prevent bugs.
+    function tokenInfoExtended(uint256 _tokenId)
+        public
+        view
+        returns (NftEntity memory)
+    {
+        NftEntity memory token = nfts[_tokenId];
+        if (token.revealed == 1) {
+            (bool staked, ) = stakingManager.isStaked(_tokenId);
+            // If token is revealed get reveal info
+            if (staked) {
+                token.staked = 1;
+                // If is staked get pending reward
+                (token.lvl, token.exp) = getLevelAndExp(_tokenId);
+            }
+        }
+        return token;
+    }
+*/
     /// @notice Returns the ids of tokens owned by a address we iterate all existing tokens
     /// it's not used in write operations to prevent bugs.
     function _findTokensOf(address _account)
@@ -311,7 +324,7 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         NftEntity[] memory tokens = new NftEntity[](_tokenIds.length);
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             // Get extended token data
-            tokens[i] = tokenInfoExtended(_tokenIds[i]);
+            tokens[i] = tokenInfo(_tokenIds[i]);
         }
         return tokens;
     }
@@ -323,19 +336,15 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
     event LevelAndExpUpdated(uint256 tokenId, uint8 lvl, uint8 exp);
 
     /// @notice Store level and experience when token is withdraw
-    function setLevelAndExp(
-        uint256 _tokenId,
-        uint8 _lvl,
-        uint8 _exp
-    ) external {
+    function writeLevelAndExp(uint256 _tokenId) external {
         // Only allow stakingManager
         require(
             msg.sender == address(stakingManager),
             "Sender should be stakingManager"
         );
-        nfts[_tokenId].lvl = _lvl;
-        nfts[_tokenId].exp = _exp;
-        emit LevelAndExpUpdated(_tokenId, _lvl, _exp);
+        NftEntity storage token = nfts[_tokenId];
+        (token.lvl, token.exp) = getLevelAndExp(_tokenId);
+        emit LevelAndExpUpdated(_tokenId, token.lvl, token.exp);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -351,9 +360,9 @@ contract FlappyAVAX is ERC721, IBobtailNFT, Ownable {
         uint256 _tokenId
     ) internal virtual override {
         super._beforeTokenTransfer(_from, _to, _tokenId);
-
+        (bool staked, ) = stakingManager.isStaked(_tokenId);
         // Only allow unstaked tokens
-        require(nfts[_tokenId].staked == 0, "Can't transfer staked token");
+        require(!staked, "Can't transfer staked token");
         // If isn't minting
         if (_from != address(0)) {
             // Should be revealed

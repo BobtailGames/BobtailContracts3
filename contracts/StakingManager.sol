@@ -144,7 +144,7 @@ contract StakingManager is Ownable {
     /// @param _tokenIds An array of token ids to stake
     /// @param _unstake If the tokens should be unstaked
     /// or only claim the reward
-    function withdrawOrClaim(uint256[] memory _tokenIds, bool _unstake)
+    function withdrawAndOrClaim(uint256[] memory _tokenIds, bool _unstake)
         external
     {
         //TODO Test withdraw for unowned token
@@ -167,10 +167,6 @@ contract StakingManager is Ownable {
             );
             /// Get the calculated reward for this staked token and sum it to total to claim
             totalReward += stakingReward(_tokenIds[i]);
-            /// Get actual level and experience of the token, as the token is staked
-            /// the lvl and exp returned is in memory and will be stored at the end of this
-            /// iteration
-            (uint8 level, uint8 exp) = flappyAvax.getLevelAndExp(_tokenIds[i]);
             /// If the token needs to be unstaked store the state
             if (_unstake) {
                 /// If the token is in a match can't be unstaked
@@ -194,7 +190,7 @@ contract StakingManager is Ownable {
                 stakedItems[_tokenIds[i]].timestampStake = block.timestamp;
             }
             // Update the level and exp of the token id
-            flappyAvax.setLevelAndExp(_tokenIds[i], level, exp);
+            flappyAvax.writeLevelAndExp(_tokenIds[i]);
         }
         // Finally the total reward of BBone is minted and transfered to sender
         if (totalReward > 0) {

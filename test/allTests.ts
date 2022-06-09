@@ -67,63 +67,6 @@ describe('BobTestSuite', () => {
       const Bobtail = await ethers.getContractFactory('Bobtail');
       bobtail = await Bobtail.deploy(joeRouter, bbone.address);
       await bobtail.deployed();
-      return;
-      /*
-      await bobtail.transfer(accounts[1].address, ethers.utils.parseUnits('1000')); // 00000
-      */
-      await bobtail.transfer(accounts[1].address, await router.quote(
-        ethers.utils.parseUnits('10'),
-        ethers.utils.parseUnits((7698 * 73).toString()),
-        ethers.utils.parseUnits('300000000'),
-      ));
-
-      console.log(ethers.utils.formatEther(await bobtail.balanceOf(accounts[0].address)));
-      console.log(ethers.utils.formatEther(await bobtail.balanceOf(accounts[1].address)));
-      const supply = await bobtail.totalSupply();
-      console.log(ethers.utils.formatEther(supply));
-      console.log('----');
-      const account = accounts[0].address;
-      const account2 = accounts[1].address;
-      let count = 0;
-      const testOutput = (val:BigNumber) => val.toString();
-      const doTest = async () => {
-        await advanceBlockAndTime(60 * 10);
-        const holdingDuration = await bobtail.levelExpDataFor(account);
-        const holdingDuration2 = await bobtail.levelExpDataFor(account2);
-        console.log(
-          testOutput(holdingDuration.holdingDuration),
-          testOutput(holdingDuration.holdPercent),
-          testOutput(holdingDuration.experience),
-          testOutput(holdingDuration.level),
-
-          'account0',
-        );
-        console.log(
-          testOutput(holdingDuration2.holdingDuration),
-          testOutput(holdingDuration2.holdPercent),
-          testOutput(holdingDuration2.experience),
-          testOutput(holdingDuration2.level),
-          holdingDuration2.level.add(1),
-          'account1',
-        );
-        console.log('*****************');
-      };
-      const interval = setInterval(async () => {
-        count += 1;
-        await doTest();
-        if (count === 5000000000) {
-          console.log('finish');
-          clearInterval(interval);
-          const bobtail2 = bobtail.connect(accounts[1]);
-          await bobtail2.transfer(accounts[2].address, await router.quote(
-            ethers.utils.parseUnits('1'),
-            ethers.utils.parseUnits((7698 * 73).toString()),
-            ethers.utils.parseUnits('300000000'),
-          ));
-          await doTest();
-        }
-      }, 1000);
-      await sleep(1000 * 1200);
     });
 
     it('Should deploy FlappyAVAX', async () => {
@@ -165,7 +108,7 @@ describe('BobTestSuite', () => {
   describe('BBone', async () => {
     describe('Admin', async () => {
       /*
-
+      TODO
       it("Shouldn't allow mint from account without permission", async () => {
         await expect(bbone.mint(accounts[0].address, ethers.utils.parseEther('1')))
           .to.be.revertedWith('Caller is not a minter');
@@ -210,7 +153,8 @@ describe('BobTestSuite', () => {
     });
     /*
     /// TODO Check if deposit max allowed staked
-    it("Shouldn't allow buying BBone", async () => {
+
+     it("Shouldn't allow buying BBone", async () => {
       await expect(doSwap([await router.WAVAX(), bbone.address], accounts[1].address))
         .to.be.revertedWith('Joe: TRANSFER_FAILED');
     });
@@ -278,10 +222,38 @@ describe('BobTestSuite', () => {
       await bobtail.transfer(accounts[2].address, ethers.utils.parseEther('1'));
       expect(ethers.utils.formatEther(await bobtail.balanceOf(accounts[2].address))).to.be.equal('1.0');
     });
+    it('Should have level and exp', async () => {
+      const account2 = accounts[3].address;
+      await bobtail.transfer(account2, ethers.utils.parseUnits('1'));
+      await advanceBlockAndTime(449);
+      let holdingDuration2 = await bobtail.levelExpDataFor(account2);
+      expect(holdingDuration2.holdingDuration).to.be.equal('44');
+      expect(holdingDuration2.experience).to.be.equal('44');
+      expect(holdingDuration2.level).to.be.equal('0');
+
+      await advanceBlockAndTime(1);
+      holdingDuration2 = await bobtail.levelExpDataFor(account2);
+
+      expect(holdingDuration2.holdingDuration).to.be.equal('45');
+      expect(holdingDuration2.experience).to.be.equal('45');
+      expect(holdingDuration2.level).to.be.equal('1');
+
+      await advanceBlockAndTime(4441444);
+      holdingDuration2 = await bobtail.levelExpDataFor(account2);
+      expect(holdingDuration2.holdingDuration).to.be.equal('444189');
+      expect(holdingDuration2.experience).to.be.equal('444189');
+      expect(holdingDuration2.level).to.be.equal('99');
+      await advanceBlockAndTime(3000);
+      holdingDuration2 = await bobtail.levelExpDataFor(account2);
+      expect(holdingDuration2.holdingDuration).to.be.equal('444489');
+      expect(holdingDuration2.experience).to.be.equal('444489');
+      expect(holdingDuration2.level).to.be.equal('100');
+    });
   });
 
   describe('FlappyAVAX:NFT', () => {
     it('XXXX', async () => {
+      return;
       for (let i = 0; i < 4; i += 1) {
         await (await flappyAVAX.mintWithAvax(accounts[0].address, '252', {
           value: ethers.utils.parseEther('252'),
@@ -315,14 +287,13 @@ describe('BobTestSuite', () => {
         console.log(`${resTmp.id}, ${resTmp.skin}, ${resTmp.face}, ${resTmp.rarity}`);
       }
     });
-    return;
     describe('Minting', () => {
       it('Should fail to mint a NFT with invalid quantity', async () => {
         await expect(flappyAVAX.mintWithAvax(accounts[0].address, '0', {
           value: ethers.utils.parseEther('0'),
         })).to.be.revertedWith('Invalid quantity');
-        await expect(flappyAVAX.mintWithAvax(accounts[0].address, '51', {
-          value: ethers.utils.parseEther('51'),
+        await expect(flappyAVAX.mintWithAvax(accounts[0].address, '11', {
+          value: ethers.utils.parseEther('11'),
         })).to.be.revertedWith('Invalid quantity');
       });
 
@@ -355,7 +326,7 @@ describe('BobTestSuite', () => {
 
       describe('Update level and exp', () => {
         it('Should only be called by StakingManager', async () => {
-          await expect(flappyAVAX.setLevelAndExp('1', '1', '1')).to.be.revertedWith(
+          await expect(flappyAVAX.writeLevelAndExp('1')).to.be.revertedWith(
             'Sender should be stakingManager',
           );
         });
@@ -392,25 +363,29 @@ describe('BobTestSuite', () => {
           'Token should be revealed',
         );
       });
-      it('Should stake token id:1', async () => {
+      it('Should reveal token id:1', async () => {
         await advanceBlockAndTime(90);
+        await (await flappyAVAX.doRevealFor(['1'])).wait();
+      });
+      it('Should stake token id:1', async () => {
         await (await staking.stake(['1'])).wait();
       });
       it('Should not allow withdraw before 63 seconds had passed', async () => {
-        await expect(staking.withdraw(['1'], false))
+        await expect(staking.withdrawAndOrClaim(['1'], false))
           .to.be.revertedWith(
             'Need 63 sec staked claim/unstake',
           );
       });
       it('Should not allow unstake if sender is not owner', async () => {
         const staking2 = staking.connect(accounts[2]);
-        await expect(staking2.withdraw(['1'], true))
+        await expect(staking2.withdrawAndOrClaim(['1'], true))
           .to.be.revertedWith(
             'Sender must be owner',
           );
       });
       it('Should verify level experience and pending reward: 864 seconds', async () => {
         let deposited = await staking.stakedTokensWithInfoOf(accounts[0].address);
+
         expect(deposited[0].lvl).to.be.equal(1);
         expect(deposited[0].exp).to.be.equal(1);
         expect(deposited[0].pendingReward).to.be.equal(0);
@@ -422,7 +397,7 @@ describe('BobTestSuite', () => {
       });
       it('Should withdraw without unstake', async () => {
         const oldBalance = await bbone.balanceOf(accounts[0].address);
-        await staking.withdraw(['1'], false);
+        await staking.withdrawAndOrClaim(['1'], false);
         expect(ethers.utils.formatEther((await bbone.balanceOf(accounts[0].address))
           .sub(oldBalance)))
           .to.be.equal('14.14');
@@ -442,7 +417,7 @@ describe('BobTestSuite', () => {
         expect(deposited[0].lvl).to.be.equal(100);
         expect(deposited[0].exp).to.be.equal(100);
         expect(ethers.utils.formatEther(deposited[0].pendingReward)).to.be.equal('288000.0');
-        await staking.withdraw(['1'], true);
+        await staking.withdrawAndOrClaim(['1'], true);
         expect(ethers.utils.formatEther((await bbone.balanceOf(accounts[0].address))
           .sub(oldBalance)))
           .to.be.equal('288000.0');
@@ -450,6 +425,7 @@ describe('BobTestSuite', () => {
     });
 
     describe('Matchmarking', () => {
+      return;
       it('Should fail for inexistent token', async () => {
         await matchs.setMaxPlayersPerMatch('5');
       });
@@ -486,14 +462,14 @@ describe('BobTestSuite', () => {
         const oldBalance = await bbone.balanceOf(accounts[0].address);
 
         await advanceBlockAndTime(64);
-        await staking.withdraw(['1'], false);
+        await staking.withdrawAndOrClaim(['1'], false);
         expect(ethers.utils.formatEther((await bbone.balanceOf(accounts[0].address))
           .sub(oldBalance)))
           .to.be.equal('2.0');
       });
       it("Should fail to unstake if match it's active ", async () => {
         await advanceBlockAndTime(64);
-        await expect(staking.withdraw(['1'], true))
+        await expect(staking.withdrawAndOrClaim(['1'], true))
           .to.be.revertedWith("Token in match can't unstake");
       });
 
@@ -636,7 +612,7 @@ describe('BobTestSuite', () => {
       });
 
       it('Should create a new match', async () => {
-        await staking.withdraw(['1'], true);
+        await staking.withdrawAndOrClaim(['1'], true);
         await staking.stake(['1']);
         await matchs.joinMatch('1', 'NA');
         let matchInfo = await matchs.matchForAddress(accounts[0].address);

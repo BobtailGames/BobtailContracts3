@@ -5,20 +5,21 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 interface IBobtailNFT is IERC721 {
     struct NftEntity {
+        uint256 id;
+        uint256 timestampMint;
+        uint256 block;
+        uint256 pendingReward;
         uint8 lvl;
         uint8 exp;
         // bool staked;
         // uint256 id;
         // uint256 matchId;
-        uint256 timestampMint;
         // uint256 timestampStake;
-        uint256 block;
         uint8 revealed;
         uint8 staked;
         uint8 skin;
         uint8 face;
         uint8 rarity;
-        uint256 pendingReward;
     }
 
     function isRevealed(uint256 _tokenId) external view returns (bool);
@@ -28,11 +29,7 @@ interface IBobtailNFT is IERC721 {
         view
         returns (uint8 level, uint8 exp);
 
-    function setLevelAndExp(
-        uint256 _tokenId,
-        uint8 _lvl,
-        uint8 _exp
-    ) external;
+    function writeLevelAndExp(uint256 _tokenId) external;
 
     function tokensOf(address _account)
         external

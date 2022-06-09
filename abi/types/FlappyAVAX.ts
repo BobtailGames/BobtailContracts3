@@ -20,21 +20,22 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export declare namespace IBobtailNFT {
   export type NftEntityStruct = {
-    lvl: BigNumberish;
-    exp: BigNumberish;
+    id: BigNumberish;
     timestampMint: BigNumberish;
     block: BigNumberish;
+    pendingReward: BigNumberish;
+    lvl: BigNumberish;
+    exp: BigNumberish;
     revealed: BigNumberish;
     staked: BigNumberish;
     skin: BigNumberish;
     face: BigNumberish;
     rarity: BigNumberish;
-    pendingReward: BigNumberish;
   };
 
   export type NftEntityStructOutput = [
-    number,
-    number,
+    BigNumber,
+    BigNumber,
     BigNumber,
     BigNumber,
     number,
@@ -42,18 +43,20 @@ export declare namespace IBobtailNFT {
     number,
     number,
     number,
-    BigNumber
+    number,
+    number
   ] & {
-    lvl: number;
-    exp: number;
+    id: BigNumber;
     timestampMint: BigNumber;
     block: BigNumber;
+    pendingReward: BigNumber;
+    lvl: number;
+    exp: number;
     revealed: number;
     staked: number;
     skin: number;
     face: number;
     rarity: number;
-    pendingReward: BigNumber;
   };
 }
 
@@ -83,18 +86,17 @@ export interface FlappyAVAXInterface extends utils.Interface {
     "renounceOwnership()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
-    "setLevelAndExp(uint256,uint8,uint8)": FunctionFragment;
     "setStakingManager(address)": FunctionFragment;
     "stakingManager()": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
     "tokenInfo(uint256)": FunctionFragment;
-    "tokenInfoExtended(uint256)": FunctionFragment;
     "tokenURI(uint256)": FunctionFragment;
     "tokensOf(address)": FunctionFragment;
     "tokensWithInfoOf(address)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
+    "writeLevelAndExp(uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -178,10 +180,6 @@ export interface FlappyAVAXInterface extends utils.Interface {
     values: [string, boolean]
   ): string;
   encodeFunctionData(
-    functionFragment: "setLevelAndExp",
-    values: [BigNumberish, BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "setStakingManager",
     values: [string]
   ): string;
@@ -196,10 +194,6 @@ export interface FlappyAVAXInterface extends utils.Interface {
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "tokenInfo",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "tokenInfoExtended",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -218,6 +212,10 @@ export interface FlappyAVAXInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "writeLevelAndExp",
+    values: [BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -286,10 +284,6 @@ export interface FlappyAVAXInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setLevelAndExp",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "setStakingManager",
     data: BytesLike
   ): Result;
@@ -303,10 +297,6 @@ export interface FlappyAVAXInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tokenInfo", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "tokenInfoExtended",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "tokenURI", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "tokensOf", data: BytesLike): Result;
   decodeFunctionResult(
@@ -319,6 +309,10 @@ export interface FlappyAVAXInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "writeLevelAndExp",
     data: BytesLike
   ): Result;
 
@@ -525,13 +519,6 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setLevelAndExp(
-      _tokenId: BigNumberish,
-      _lvl: BigNumberish,
-      _exp: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     setStakingManager(
       _stakingManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -547,11 +534,6 @@ export interface FlappyAVAX extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
     tokenInfo(
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<[IBobtailNFT.NftEntityStructOutput]>;
-
-    tokenInfoExtended(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<[IBobtailNFT.NftEntityStructOutput]>;
@@ -580,6 +562,11 @@ export interface FlappyAVAX extends BaseContract {
 
     transferOwnership(
       newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    writeLevelAndExp(
+      _tokenId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -676,13 +663,6 @@ export interface FlappyAVAX extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setLevelAndExp(
-    _tokenId: BigNumberish,
-    _lvl: BigNumberish,
-    _exp: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   setStakingManager(
     _stakingManager: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -698,11 +678,6 @@ export interface FlappyAVAX extends BaseContract {
   symbol(overrides?: CallOverrides): Promise<string>;
 
   tokenInfo(
-    _tokenId: BigNumberish,
-    overrides?: CallOverrides
-  ): Promise<IBobtailNFT.NftEntityStructOutput>;
-
-  tokenInfoExtended(
     _tokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<IBobtailNFT.NftEntityStructOutput>;
@@ -725,6 +700,11 @@ export interface FlappyAVAX extends BaseContract {
 
   transferOwnership(
     newOwner: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  writeLevelAndExp(
+    _tokenId: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -819,13 +799,6 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setLevelAndExp(
-      _tokenId: BigNumberish,
-      _lvl: BigNumberish,
-      _exp: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     setStakingManager(
       _stakingManager: string,
       overrides?: CallOverrides
@@ -841,11 +814,6 @@ export interface FlappyAVAX extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<string>;
 
     tokenInfo(
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<IBobtailNFT.NftEntityStructOutput>;
-
-    tokenInfoExtended(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<IBobtailNFT.NftEntityStructOutput>;
@@ -868,6 +836,11 @@ export interface FlappyAVAX extends BaseContract {
 
     transferOwnership(
       newOwner: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    writeLevelAndExp(
+      _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -1049,13 +1022,6 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setLevelAndExp(
-      _tokenId: BigNumberish,
-      _lvl: BigNumberish,
-      _exp: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     setStakingManager(
       _stakingManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1071,11 +1037,6 @@ export interface FlappyAVAX extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
     tokenInfo(
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    tokenInfoExtended(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
@@ -1101,6 +1062,11 @@ export interface FlappyAVAX extends BaseContract {
 
     transferOwnership(
       newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    writeLevelAndExp(
+      _tokenId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -1204,13 +1170,6 @@ export interface FlappyAVAX extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setLevelAndExp(
-      _tokenId: BigNumberish,
-      _lvl: BigNumberish,
-      _exp: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     setStakingManager(
       _stakingManager: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1226,11 +1185,6 @@ export interface FlappyAVAX extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     tokenInfo(
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    tokenInfoExtended(
       _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1259,6 +1213,11 @@ export interface FlappyAVAX extends BaseContract {
 
     transferOwnership(
       newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    writeLevelAndExp(
+      _tokenId: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

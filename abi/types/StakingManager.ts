@@ -19,21 +19,22 @@ import { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 
 export declare namespace IBobtailNFT {
   export type NftEntityStruct = {
-    lvl: BigNumberish;
-    exp: BigNumberish;
+    id: BigNumberish;
     timestampMint: BigNumberish;
     block: BigNumberish;
+    pendingReward: BigNumberish;
+    lvl: BigNumberish;
+    exp: BigNumberish;
     revealed: BigNumberish;
     staked: BigNumberish;
     skin: BigNumberish;
     face: BigNumberish;
     rarity: BigNumberish;
-    pendingReward: BigNumberish;
   };
 
   export type NftEntityStructOutput = [
-    number,
-    number,
+    BigNumber,
+    BigNumber,
     BigNumber,
     BigNumber,
     number,
@@ -41,18 +42,20 @@ export declare namespace IBobtailNFT {
     number,
     number,
     number,
-    BigNumber
+    number,
+    number
   ] & {
-    lvl: number;
-    exp: number;
+    id: BigNumber;
     timestampMint: BigNumber;
     block: BigNumber;
+    pendingReward: BigNumber;
+    lvl: number;
+    exp: number;
     revealed: number;
     staked: number;
     skin: number;
     face: number;
     rarity: number;
-    pendingReward: BigNumber;
   };
 }
 
@@ -78,7 +81,7 @@ export interface StakingManagerInterface extends utils.Interface {
     "stakingCountForAddress(address)": FunctionFragment;
     "stakingReward(uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "withdrawOrClaim(uint256[],bool)": FunctionFragment;
+    "withdrawAndOrClaim(uint256[],bool)": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "bbone", values?: undefined): string;
@@ -152,7 +155,7 @@ export interface StakingManagerInterface extends utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "withdrawOrClaim",
+    functionFragment: "withdrawAndOrClaim",
     values: [BigNumberish[], boolean]
   ): string;
 
@@ -218,7 +221,7 @@ export interface StakingManagerInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "withdrawOrClaim",
+    functionFragment: "withdrawAndOrClaim",
     data: BytesLike
   ): Result;
 
@@ -377,7 +380,7 @@ export interface StakingManager extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    withdrawOrClaim(
+    withdrawAndOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -464,7 +467,7 @@ export interface StakingManager extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  withdrawOrClaim(
+  withdrawAndOrClaim(
     _tokenIds: BigNumberish[],
     _unstake: boolean,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -546,7 +549,7 @@ export interface StakingManager extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    withdrawOrClaim(
+    withdrawAndOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: CallOverrides
@@ -660,7 +663,7 @@ export interface StakingManager extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    withdrawOrClaim(
+    withdrawAndOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -746,7 +749,7 @@ export interface StakingManager extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    withdrawOrClaim(
+    withdrawAndOrClaim(
       _tokenIds: BigNumberish[],
       _unstake: boolean,
       overrides?: Overrides & { from?: string | Promise<string> }
