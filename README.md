@@ -1,1 +1,5 @@
-Proyecto que no saque a producción por https://twitter.com/vicmmg_
+ 
+[Proyecto enfocado a juegos que no saque a producción, escrito por Victor Moreno](https://twitter.com/vicmmg_)
+
+
+
